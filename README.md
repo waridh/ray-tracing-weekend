@@ -1,2 +1,3 @@
 # ray-tracing-weekend
-This will not take a weekend
+
+Ray tracing in one weekend, but it is in Rust.
