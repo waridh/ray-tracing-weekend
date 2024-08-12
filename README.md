@@ -17,4 +17,4 @@ cargo run > image.ppm
 
 ## Current output
 
-![Current program image output](./image.ppm)
+![Current program image output](./image.jpeg)

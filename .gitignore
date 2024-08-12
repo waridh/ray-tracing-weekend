@@ -24,3 +24,6 @@ Cargo.lock
 # Added by cargo
 
 /target
+
+# Raw ppm is very expensive, therefore, remove
+*.ppm
