@@ -14,7 +14,7 @@ fn ray_color(r: ray::Ray) -> color::Color {
 fn main() {
     let aspect_ratio: f32 = 5. / 4.;
 
-    let image_width = 1200usize;
+    let image_width = 800usize;
 
     // Unclear currently if this could be an if let.
     let image_height_: usize = ((image_width as f32) / aspect_ratio) as usize;
