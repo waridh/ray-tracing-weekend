@@ -1,8 +1,9 @@
 use std::{fmt, ops};
 
 #[derive(Debug, PartialEq, Clone, Default, Copy)]
-pub struct Vec3(f32, f32, f32);
+pub struct Vec3(pub f32, pub f32, pub f32);
 
+pub type Point3 = Vec3;
 impl Vec3 {
     pub fn new<A>(args: A) -> Self
     where
@@ -50,6 +51,12 @@ impl From<usize> for Vec3 {
         Vec3(val, val, val)
     }
 }
+impl From<(f32, f32, f32)> for Vec3 {
+    fn from(value: (f32, f32, f32)) -> Self {
+        let (a, b, c) = value;
+        Vec3(a, b, c)
+    }
+}
 
 impl fmt::Display for Vec3 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -58,6 +65,13 @@ impl fmt::Display for Vec3 {
 }
 
 impl ops::Add<Vec3> for Vec3 {
+    type Output = Vec3;
+    fn add(self, rhs: Vec3) -> Self::Output {
+        Vec3(rhs.0 + self.0, rhs.1 + self.1, rhs.2 + self.2)
+    }
+}
+
+impl ops::Add<Vec3> for &Vec3 {
     type Output = Vec3;
     fn add(self, rhs: Vec3) -> Self::Output {
         Vec3(rhs.0 + self.0, rhs.1 + self.1, rhs.2 + self.2)
@@ -88,10 +102,19 @@ impl ops::SubAssign<Vec3> for Vec3 {
 }
 
 /// Implementing scalar multiplication
+/// Tested
 impl ops::Mul<f32> for Vec3 {
     type Output = Vec3;
     fn mul(self, rhs: f32) -> Self::Output {
         Vec3(self.0 * rhs, self.1 * rhs, self.2 * rhs)
+    }
+}
+
+/// Implementing scalar multiplication
+impl ops::Mul<Vec3> for f32 {
+    type Output = Vec3;
+    fn mul(self, rhs: Vec3) -> Self::Output {
+        Vec3(rhs.0 * self, rhs.1 * self, rhs.2 * self)
     }
 }
 
@@ -187,10 +210,22 @@ mod tests {
     }
 
     #[test]
-    fn addition() {
+    fn vec3_addition() {
         let left = Vec3(1., 2., 3.);
         let right = Vec3(4., 5., 6.);
         let res = left + right;
+        let expected = Vec3(5., 7., 9.);
+
+        assert_eq!(res, expected);
+
+        assert_eq!(left, Vec3(1., 2., 3.));
+    }
+
+    #[test]
+    fn vec3_left_ref_addition() {
+        let left = Vec3(1., 2., 3.);
+        let right = Vec3(4., 5., 6.);
+        let res = &left + right;
         let expected = Vec3(5., 7., 9.);
 
         assert_eq!(res, expected);
@@ -232,6 +267,15 @@ mod tests {
     fn vec3_scalar_multiplication() {
         let left = Vec3(1., 2., 3.);
         let res = left * 3.;
+        let expected = Vec3(3., 6., 9.);
+
+        assert_eq!(res, expected);
+    }
+
+    #[test]
+    fn vec3_reversed_scalar_multiplication() {
+        let left = Vec3(1., 2., 3.);
+        let res = 3. * left;
         let expected = Vec3(3., 6., 9.);
 
         assert_eq!(res, expected);
