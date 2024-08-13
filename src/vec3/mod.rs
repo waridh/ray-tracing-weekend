@@ -78,6 +78,13 @@ impl ops::Add<Vec3> for &Vec3 {
     }
 }
 
+impl ops::Add<&Vec3> for &Vec3 {
+    type Output = Vec3;
+    fn add(self, rhs: &Vec3) -> Self::Output {
+        Vec3(rhs.0 + self.0, rhs.1 + self.1, rhs.2 + self.2)
+    }
+}
+
 impl ops::AddAssign<Vec3> for Vec3 {
     fn add_assign(&mut self, rhs: Vec3) {
         self.0 += rhs.0;
@@ -86,9 +93,35 @@ impl ops::AddAssign<Vec3> for Vec3 {
     }
 }
 
+/// Vector subtraction, done element-wise.
+/// Tested
 impl ops::Sub<Vec3> for Vec3 {
     type Output = Vec3;
     fn sub(self, rhs: Vec3) -> Self::Output {
+        Vec3(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
+    }
+}
+
+/// Tested
+impl ops::Sub<&Vec3> for &Vec3 {
+    type Output = Vec3;
+    fn sub(self, rhs: &Vec3) -> Self::Output {
+        Vec3(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
+    }
+}
+
+/// Tested
+impl ops::Sub<Vec3> for &Vec3 {
+    type Output = Vec3;
+    fn sub(self, rhs: Vec3) -> Self::Output {
+        Vec3(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
+    }
+}
+
+/// Tested
+impl ops::Sub<&Vec3> for Vec3 {
+    type Output = Vec3;
+    fn sub(self, rhs: &Vec3) -> Self::Output {
         Vec3(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
     }
 }
@@ -118,6 +151,23 @@ impl ops::Mul<Vec3> for f32 {
     }
 }
 
+/// Implementing scalar multiplication
+impl ops::Mul<Vec3> for usize {
+    type Output = Vec3;
+    fn mul(self, rhs: Vec3) -> Self::Output {
+        let conv = self as f32;
+        conv * rhs
+    }
+}
+
+/// Implementing scalar multiplication
+impl ops::Mul<usize> for Vec3 {
+    type Output = Vec3;
+    fn mul(self, rhs: usize) -> Self::Output {
+        rhs * self
+    }
+}
+
 /// Implementing element wise multiplication
 impl ops::Mul<Vec3> for Vec3 {
     type Output = Vec3;
@@ -140,6 +190,16 @@ impl ops::Div<f32> for Vec3 {
     type Output = Vec3;
     fn div(self, rhs: f32) -> Self::Output {
         Vec3(self.0 / rhs, self.1 / rhs, self.2 / rhs)
+    }
+}
+
+/// Implementing scalar division for vec3
+/// Tested
+impl ops::Div<usize> for Vec3 {
+    type Output = Vec3;
+    fn div(self, rhs: usize) -> Self::Output {
+        let conv = rhs as f32;
+        self / conv
     }
 }
 
@@ -222,6 +282,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::op_ref)]
     fn vec3_left_ref_addition() {
         let left = Vec3(1., 2., 3.);
         let right = Vec3(4., 5., 6.);
@@ -248,6 +309,39 @@ mod tests {
         let left = Vec3(1., 2., 3.);
         let right = Vec3(4., 5., 6.);
         let res = left - right;
+        let expected = Vec3(-3., -3., -3.);
+
+        assert_eq!(res, expected);
+    }
+
+    #[test]
+    #[allow(clippy::op_ref)]
+    fn sub_left_ref_vec3() {
+        let left = Vec3(1., 2., 3.);
+        let right = Vec3(4., 5., 6.);
+        let res = &left - right;
+        let expected = Vec3(-3., -3., -3.);
+
+        assert_eq!(res, expected);
+    }
+
+    #[test]
+    #[allow(clippy::op_ref)]
+    fn sub_right_ref_vec3() {
+        let left = Vec3(1., 2., 3.);
+        let right = Vec3(4., 5., 6.);
+        let res = left - &right;
+        let expected = Vec3(-3., -3., -3.);
+
+        assert_eq!(res, expected);
+    }
+
+    #[test]
+    #[allow(clippy::op_ref)]
+    fn sub_ref_vec3() {
+        let left = Vec3(1., 2., 3.);
+        let right = Vec3(4., 5., 6.);
+        let res = &left - &right;
         let expected = Vec3(-3., -3., -3.);
 
         assert_eq!(res, expected);
