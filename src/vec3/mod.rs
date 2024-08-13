@@ -64,6 +64,7 @@ impl fmt::Display for Vec3 {
     }
 }
 
+/// Tested
 impl ops::Add<Vec3> for Vec3 {
     type Output = Vec3;
     fn add(self, rhs: Vec3) -> Self::Output {
@@ -74,6 +75,13 @@ impl ops::Add<Vec3> for Vec3 {
 impl ops::Add<Vec3> for &Vec3 {
     type Output = Vec3;
     fn add(self, rhs: Vec3) -> Self::Output {
+        Vec3(rhs.0 + self.0, rhs.1 + self.1, rhs.2 + self.2)
+    }
+}
+
+impl ops::Add<&Vec3> for Vec3 {
+    type Output = Vec3;
+    fn add(self, rhs: &Vec3) -> Self::Output {
         Vec3(rhs.0 + self.0, rhs.1 + self.1, rhs.2 + self.2)
     }
 }

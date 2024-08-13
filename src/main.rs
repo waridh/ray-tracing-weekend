@@ -22,7 +22,7 @@ fn ray_color(r: ray::Ray) -> color::Color {
     } else {
         let unit_dir = r.direction.unit_vector();
         let a = 0.5 * (unit_dir.1 + 1.);
-        color::Color::from_args(1., 1., 1.) * (1. - a) + a * color::Color::from_args(0.5, 0.7, 1.0)
+        color::Color::from_args(1., 1., 1.) * (1. - a) + a * color::Color::from_args(0.8, 0.5, 1.0)
     }
 }
 

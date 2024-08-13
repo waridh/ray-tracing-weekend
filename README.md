@@ -15,6 +15,10 @@ Here is an example of how to run the program, and save it to a file called `imag
 cargo run > image.ppm
 ```
 
+## Program Capabilities
+
+Currently, this program will generate an unshaded red sphere in the middle of a vertical gradient.
+
 ## Current output
 
 ![Current program image output](./image.jpeg)
