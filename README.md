@@ -17,7 +17,8 @@ cargo run > image.ppm
 
 ## Program Capabilities
 
-Currently, this program will generate an unshaded red sphere in the middle of a vertical gradient.
+Currently, this program will generate a sphere in the middle of a vertical
+gradient that is shaded based on the surface normal vectors.
 
 ## Current output
 
