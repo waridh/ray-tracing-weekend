@@ -5,6 +5,8 @@ mod color;
 mod ray;
 mod vec3;
 
+/// Calculates if the camera ray hits the sphere, and if it does, what the
+/// scalar on the direction of the ray will result in the intersection.
 fn hit_sphere(center: &vec3::Point3, radius: f32, r: &ray::Ray) -> f32 {
     let oc = center - r.origin.as_ref();
     let a = r.direction.dot(&r.direction);
@@ -20,6 +22,7 @@ fn hit_sphere(center: &vec3::Point3, radius: f32, r: &ray::Ray) -> f32 {
     }
 }
 
+/// Calculates the color of the ray.
 fn ray_color(r: ray::Ray) -> color::Color {
     let t = hit_sphere(&vec3::Vec3(0., 0., -1.), 0.5, &r);
     if t > 0. {
