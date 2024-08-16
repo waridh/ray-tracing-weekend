@@ -5,11 +5,14 @@ pub struct Vec3(pub f32, pub f32, pub f32);
 
 pub type Point3 = Vec3;
 impl Vec3 {
-    pub fn new<A>(args: A) -> Self
+    pub fn new<A>(a: A, b: A, c: A) -> Self
     where
-        A: Into<Vec3>,
+        A: Into<f32>,
     {
-        args.into()
+        let a: f32 = a.into();
+        let b: f32 = b.into();
+        let c: f32 = c.into();
+        Vec3(a, b, c)
     }
 
     /// Tested
@@ -51,6 +54,7 @@ impl From<usize> for Vec3 {
         Vec3(val, val, val)
     }
 }
+
 impl From<(f32, f32, f32)> for Vec3 {
     fn from(value: (f32, f32, f32)) -> Self {
         let (a, b, c) = value;
@@ -131,6 +135,13 @@ impl ops::Sub<&Vec3> for Vec3 {
     type Output = Vec3;
     fn sub(self, rhs: &Vec3) -> Self::Output {
         Vec3(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
+    }
+}
+
+impl ops::Neg for Vec3 {
+    type Output = Vec3;
+    fn neg(self) -> Self::Output {
+        Vec3(-self.0, -self.1, -self.2)
     }
 }
 
@@ -263,7 +274,7 @@ mod tests {
 
     #[test]
     fn construction_from_single_usize() {
-        let input = Vec3::new(1);
+        let input = Vec3::from(1);
         assert_eq!(input.0, 1.);
         assert_eq!(input.1, 1.);
         assert_eq!(input.2, 1.);
