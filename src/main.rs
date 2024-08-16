@@ -10,15 +10,15 @@ mod vec3;
 fn hit_sphere(center: &vec3::Point3, radius: f32, r: &ray::Ray) -> f32 {
     let oc = center - r.origin.as_ref();
     let a = r.direction.dot(&r.direction);
-    let b = -2.0 * r.direction.dot(&oc);
+    let b = r.direction.dot(&oc);
     let c = oc.dot(&oc) - radius * radius;
 
-    let discriminant = b * b - 4. * a * c;
+    let discriminant = b * b - a * c;
 
     if discriminant < 0. {
         -1.
     } else {
-        (-b - discriminant.sqrt()) / (2. * a)
+        (b - discriminant.sqrt()) / (a)
     }
 }
 
