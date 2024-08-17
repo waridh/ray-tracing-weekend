@@ -36,16 +36,16 @@ impl hittable::Hittable for Sphere {
         }
 
         let rootd = discriminant.sqrt();
-        let t = (b - rootd) / (a);
-        let t = if t >= ray_tmax && t < ray_tmin {
-            let t = (b + rootd) / (a);
-            if t < ray_tmax && t >= ray_tmin {
-                t
+        let temp = (b - rootd) / (a);
+        let t = if temp < ray_tmax && temp >= ray_tmin {
+            temp
+        } else {
+            let temp2 = (b + rootd) / (a);
+            if temp2 < ray_tmax && temp2 >= ray_tmin {
+                temp2
             } else {
                 return None;
             }
-        } else {
-            t
         };
         let p = r.at(t);
         Some(hittable::HitRecord::new(
@@ -73,5 +73,25 @@ mod test {
         let sphere = Sphere::from((5., 5., 5., 0.5));
 
         assert!(sphere.hit(&ray, 0., 100.).is_some());
+    }
+
+    #[test]
+    fn test_range_miss() {
+        let origin = Rc::new(vec3::Vec3(0., 0., 0.));
+        let ray = Ray::new(vec3::Vec3(1., 1., 1.), &origin);
+
+        let sphere = Sphere::from((5., 5., 5., 0.5));
+
+        assert!(sphere.hit(&ray, 0., 1.).is_none());
+    }
+
+    #[test]
+    fn test_range_miss_2() {
+        let origin = Rc::new(vec3::Vec3(0., 0., 0.));
+        let ray = Ray::new(vec3::Vec3(1., 1., 1.), &origin);
+
+        let sphere = Sphere::from((-5., -5., -5., 0.5));
+
+        assert!(sphere.hit(&ray, 0., 1.).is_none());
     }
 }

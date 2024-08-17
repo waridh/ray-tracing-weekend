@@ -36,10 +36,7 @@ fn main() {
 
     // World
     let sphere_1 = Rc::new(sphere::Sphere::from((0., 0., -1., 0.5)));
-    // TODO: There is a bug with this large sphere. Might be because the ray
-    // points too far backwards as well
-
-    // let sphere_2 = Rc::new(sphere::Sphere::from((1.0, -50., -1., 50.)));
+    let sphere_2 = Rc::new(sphere::Sphere::from((1.0, -100.5, -1., 100.)));
     let sphere_3 = Rc::new(sphere::Sphere::from((-1., 1., -1., 0.5)));
     let sphere_4 = Rc::new(sphere::Sphere::from((1., 1., -1., 0.5)));
     let mut world = hittable::HittableList::new();
@@ -47,7 +44,7 @@ fn main() {
     world.push(&sphere_1);
     world.push(&sphere_3);
     world.push(&sphere_4);
-    // world.push(&sphere_2);
+    world.push(&sphere_2);
 
     // Camera
     // TODO: Make the camera a struct
