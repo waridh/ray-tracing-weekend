@@ -59,7 +59,7 @@ impl Hittable for HittableList {
         let mut hit_something = false;
         for hit_obj_rc in self.objects.iter() {
             let hit_obj = hit_obj_rc.as_ref();
-            match hit_obj.hit(r, ray_interval) {
+            match hit_obj.hit(r, &closest_so_far) {
                 None => continue,
                 Some(x) => {
                     hit_something = true;
