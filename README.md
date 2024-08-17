@@ -32,6 +32,6 @@ gradient that is shaded based on the surface normal vectors.
 
 ![Four sphere objects being displayed](./image_archive/fixed_faulty_hit_logic.jpeg)
 
-### With Aliasing
+### With Anti-Aliasing
 
 ![Anti-aliased output](./image_archive/antialiased.jpeg)
