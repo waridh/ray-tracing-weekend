@@ -231,11 +231,22 @@ impl ops::Div<f32> for &Vec3 {
     }
 }
 
+/// Tested
 impl ops::DivAssign<f32> for Vec3 {
     fn div_assign(&mut self, rhs: f32) {
         self.0 /= rhs;
         self.1 /= rhs;
         self.2 /= rhs;
+    }
+}
+
+/// Tested
+impl ops::DivAssign<usize> for Vec3 {
+    fn div_assign(&mut self, rhs: usize) {
+        let converted = rhs as f32;
+        self.0 /= converted;
+        self.1 /= converted;
+        self.2 /= converted;
     }
 }
 
@@ -246,6 +257,17 @@ impl ops::Index<usize> for Vec3 {
             0 => &self.0,
             1 => &self.1,
             2 => &self.2,
+            _ => panic!("Index out of bounds"),
+        }
+    }
+}
+
+impl ops::IndexMut<usize> for Vec3 {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        match index {
+            0 => &mut self.0,
+            1 => &mut self.1,
+            2 => &mut self.2,
             _ => panic!("Index out of bounds"),
         }
     }
@@ -425,6 +447,15 @@ mod tests {
     fn vec3_assign_scalar_division() {
         let mut left = Vec3(3., 6., 9.);
         left /= 2.;
+        let expected = Vec3(1.5, 3., 4.5);
+
+        assert_eq!(left, expected);
+    }
+
+    #[test]
+    fn vec3_assign_scalar_division_usize() {
+        let mut left = Vec3(3., 6., 9.);
+        left /= 2;
         let expected = Vec3(1.5, 3., 4.5);
 
         assert_eq!(left, expected);

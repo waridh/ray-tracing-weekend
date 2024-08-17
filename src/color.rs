@@ -4,6 +4,7 @@ use std::{fmt, ops};
 /// The Color newtype is a vec3 that represents a color.
 /// Invariant:
 ///     The fields of this struct must be a float between 0 and 1.
+#[derive(Debug, PartialEq)]
 pub struct Color(vec3::Vec3);
 
 impl Color {
@@ -24,6 +25,15 @@ impl From<(f32, f32, f32)> for Color {
     }
 }
 
+/// Used to clamp the color output
+fn clamp(legal_range: &ops::Range<f32>, val: f32) -> f32 {
+    match val {
+        x if x > legal_range.end => legal_range.end,
+        x if x < legal_range.start => legal_range.start,
+        x => x,
+    }
+}
+
 impl fmt::Display for Color {
     /// Color has a different byte representation in ppm than vec3.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -31,9 +41,11 @@ impl fmt::Display for Color {
         let g = self.0[1];
         let b = self.0[2];
 
-        let ir = (255.999 * r) as u8;
-        let ig = (255.999 * g) as u8;
-        let ib = (255.999 * b) as u8;
+        let legal_range = 0f32..0.999;
+
+        let ir = (255.999 * clamp(&legal_range, r)) as u8;
+        let ig = (255.999 * clamp(&legal_range, g)) as u8;
+        let ib = (255.999 * clamp(&legal_range, b)) as u8;
 
         write!(f, "{} {} {}", ir, ig, ib)
     }
@@ -43,6 +55,12 @@ impl ops::Index<usize> for Color {
     type Output = f32;
     fn index(&self, index: usize) -> &Self::Output {
         &self.0[index]
+    }
+}
+
+impl ops::IndexMut<usize> for Color {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.0[index]
     }
 }
 
@@ -69,6 +87,26 @@ impl ops::Add<Color> for Color {
     }
 }
 
+impl ops::AddAssign<Color> for Color {
+    fn add_assign(&mut self, rhs: Color) {
+        for i in 0..3 {
+            self[i] += rhs[i]
+        }
+    }
+}
+
+impl ops::DivAssign<f32> for Color {
+    fn div_assign(&mut self, rhs: f32) {
+        self.0 /= rhs
+    }
+}
+
+impl ops::DivAssign<usize> for Color {
+    fn div_assign(&mut self, rhs: usize) {
+        self.0 /= rhs
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -88,5 +126,23 @@ mod test {
         assert_eq!(0.5, input[0]);
         assert_eq!(0.25, input[1]);
         assert_eq!(0.125, input[2]);
+    }
+
+    #[test]
+    fn color_assign_scalar_division() {
+        let mut left = Color::from_args(3., 6., 9.);
+        left /= 2.;
+        let expected = Color::from_args(1.5, 3., 4.5);
+
+        assert_eq!(left, expected);
+    }
+
+    #[test]
+    fn color_assign_scalar_division_usize() {
+        let mut left = Color::from_args(3., 6., 9.);
+        left /= 2;
+        let expected = Color::from_args(1.5, 3., 4.5);
+
+        assert_eq!(left, expected);
     }
 }
