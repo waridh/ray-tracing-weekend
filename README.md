@@ -27,3 +27,7 @@ gradient that is shaded based on the surface normal vectors.
 ![Original program image output](./image_archive/shade_by_normal.jpeg)
 
 ![Fixed aspect ratio](./image_archive/fixed_aspect_ratio.jpeg)
+
+### With multiple objects
+
+![Four sphere objects being displayed](./image_archive/fixed_faulty_hit_logic.jpeg)
