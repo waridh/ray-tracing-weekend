@@ -1,4 +1,5 @@
 use crate::{hittable, vec3};
+use std::ops::Range;
 pub struct Sphere {
     center: vec3::Point3,
     radius: f32,
@@ -18,12 +19,7 @@ impl From<(f32, f32, f32, f32)> for Sphere {
 }
 
 impl hittable::Hittable for Sphere {
-    fn hit(
-        &self,
-        r: &crate::ray::Ray,
-        ray_tmin: f32,
-        ray_tmax: f32,
-    ) -> Option<hittable::HitRecord> {
+    fn hit(&self, r: &crate::ray::Ray, ray_interval: &Range<f32>) -> Option<hittable::HitRecord> {
         let oc = self.center - r.origin.as_ref();
         let a = r.direction.dot(&r.direction);
         let b = r.direction.dot(&oc);
@@ -37,11 +33,11 @@ impl hittable::Hittable for Sphere {
 
         let rootd = discriminant.sqrt();
         let temp = (b - rootd) / (a);
-        let t = if temp < ray_tmax && temp >= ray_tmin {
+        let t = if ray_interval.contains(&temp) {
             temp
         } else {
             let temp2 = (b + rootd) / (a);
-            if temp2 < ray_tmax && temp2 >= ray_tmin {
+            if ray_interval.contains(&temp2) {
                 temp2
             } else {
                 return None;
@@ -72,7 +68,7 @@ mod test {
 
         let sphere = Sphere::from((5., 5., 5., 0.5));
 
-        assert!(sphere.hit(&ray, 0., 100.).is_some());
+        assert!(sphere.hit(&ray, &(0f32..100f32)).is_some());
     }
 
     #[test]
@@ -82,7 +78,7 @@ mod test {
 
         let sphere = Sphere::from((5., 5., 5., 0.5));
 
-        assert!(sphere.hit(&ray, 0., 1.).is_none());
+        assert!(sphere.hit(&ray, &(0f32..1f32)).is_none());
     }
 
     #[test]
@@ -92,6 +88,6 @@ mod test {
 
         let sphere = Sphere::from((-5., -5., -5., 0.5));
 
-        assert!(sphere.hit(&ray, 0., 1.).is_none());
+        assert!(sphere.hit(&ray, &(0f32..1f32)).is_none());
     }
 }

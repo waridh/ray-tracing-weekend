@@ -1,5 +1,5 @@
 use crate::{ray, vec3};
-use std::rc;
+use std::{ops::Range, rc};
 
 pub struct HitRecord {
     pub p: vec3::Point3,
@@ -22,7 +22,7 @@ impl HitRecord {
 }
 
 pub trait Hittable {
-    fn hit(&self, r: &ray::Ray, ray_tmin: f32, ray_tmax: f32) -> Option<HitRecord>;
+    fn hit(&self, r: &ray::Ray, ray_interval: &Range<f32>) -> Option<HitRecord>;
 }
 
 pub struct HittableList {
@@ -52,19 +52,19 @@ impl HittableList {
 }
 
 impl Hittable for HittableList {
-    fn hit(&self, r: &ray::Ray, ray_tmin: f32, ray_tmax: f32) -> Option<HitRecord> {
+    fn hit(&self, r: &ray::Ray, ray_interval: &Range<f32>) -> Option<HitRecord> {
         let mut hit_record: HitRecord =
             HitRecord::new(vec3::Vec3(0., 0., 0.), vec3::Vec3(0., 0., 0.), 0., r);
-        let mut closest_so_far = ray_tmax;
+        let mut closest_so_far = ray_interval.clone();
         let mut hit_something = false;
         for hit_obj_rc in self.objects.iter() {
             let hit_obj = hit_obj_rc.as_ref();
-            match hit_obj.hit(r, ray_tmin, closest_so_far) {
+            match hit_obj.hit(r, ray_interval) {
                 None => continue,
                 Some(x) => {
                     hit_something = true;
-                    if x.t < closest_so_far {
-                        closest_so_far = x.t;
+                    if x.t < closest_so_far.end {
+                        closest_so_far.end = x.t;
                         hit_record = x;
                     }
                 }
@@ -133,7 +133,7 @@ mod test {
         list.push(&item_1);
         list.push(&item_2);
 
-        let hit_record = list.hit(&r, 0., 3.);
+        let hit_record = list.hit(&r, &(0f32..3f32));
         assert!(hit_record.is_some());
     }
 }

@@ -1,6 +1,6 @@
 use hittable::Hittable;
 use indicatif::ProgressIterator;
-use std::{f32::INFINITY, rc::Rc};
+use std::{f32::INFINITY, ops::Range, rc::Rc};
 
 mod color;
 mod hittable;
@@ -8,9 +8,11 @@ mod ray;
 mod sphere;
 mod vec3;
 
+const ZERO_TO_INFINITY: Range<f32> = 0f32..INFINITY;
+
 /// Calculates the color of the ray.
 fn ray_color(r: ray::Ray, world: &impl Hittable) -> color::Color {
-    match world.hit(&r, 0., INFINITY) {
+    match world.hit(&r, &ZERO_TO_INFINITY) {
         Some(t) => {
             // let n = (r.at(t) - vec3::Vec3(0., 0., -1.)).unit_vector();
             let m = 0.5 * (vec3::Vec3(1., 1., 1.) + t.normal.unit_vector());
