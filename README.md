@@ -20,6 +20,10 @@ cargo run > image.ppm
 Currently, this program will generate a sphere in the middle of a vertical
 gradient that is shaded based on the surface normal vectors.
 
-## Current output
+## Outputs
 
-![Current program image output](./image.jpeg)
+### Shading by Normal
+
+![Original program image output](./image_archive/shade_by_normal.jpeg)
+
+![Fixed aspect ratio](./image_archive/fixed_aspect_ratio.jpeg)

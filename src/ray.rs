@@ -1,5 +1,5 @@
 use crate::vec3;
-use std::{ops::Deref, rc};
+use std::rc;
 
 pub struct Ray {
     pub direction: vec3::Vec3,
@@ -7,13 +7,15 @@ pub struct Ray {
 }
 
 impl Ray {
-    pub fn new(direction: vec3::Vec3, origin: rc::Rc<vec3::Vec3>) -> Self {
-        Ray { direction, origin }
+    pub fn new(direction: vec3::Vec3, origin: &rc::Rc<vec3::Vec3>) -> Self {
+        Ray {
+            direction,
+            origin: rc::Rc::clone(origin),
+        }
     }
 
-    #[allow(dead_code)]
     pub fn at(&self, t: f32) -> vec3::Point3 {
-        self.origin.deref() + (t * self.direction)
+        self.origin.as_ref() + (t * self.direction)
     }
 }
 

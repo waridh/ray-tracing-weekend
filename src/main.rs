@@ -1,6 +1,6 @@
 use hittable::Hittable;
 use indicatif::ProgressIterator;
-use std::rc::Rc;
+use std::{f32::INFINITY, rc::Rc};
 
 mod color;
 mod hittable;
@@ -9,11 +9,8 @@ mod sphere;
 mod vec3;
 
 /// Calculates the color of the ray.
-fn ray_color(r: ray::Ray) -> color::Color {
-    let local_sphere = sphere::Sphere::new(vec3::Vec3(0., 0., -1.), 0.5);
-    let hit_rec = local_sphere.hit(&r, 0., 100.);
-
-    match hit_rec {
+fn ray_color(r: ray::Ray, world: &impl Hittable) -> color::Color {
+    match world.hit(&r, 0., INFINITY) {
         Some(t) => {
             // let n = (r.at(t) - vec3::Vec3(0., 0., -1.)).unit_vector();
             let m = 0.5 * (vec3::Vec3(1., 1., 1.) + t.normal.unit_vector());
@@ -35,13 +32,28 @@ fn main() {
 
     // Unclear currently if this could be an if let.
     let image_height_: usize = ((image_width as f32) / aspect_ratio) as usize;
-    let image_height = if image_height_ < 1 { 1 } else { image_height_ };
+    let image_height: usize = if image_height_ < 1 { 1 } else { image_height_ };
+
+    // World
+    let sphere_1 = Rc::new(sphere::Sphere::from((0., 0., -1., 0.5)));
+    // TODO: There is a bug with this large sphere. Might be because the ray
+    // points too far backwards as well
+
+    // let sphere_2 = Rc::new(sphere::Sphere::from((1.0, -50., -1., 50.)));
+    let sphere_3 = Rc::new(sphere::Sphere::from((-1., 1., -1., 0.5)));
+    let sphere_4 = Rc::new(sphere::Sphere::from((1., 1., -1., 0.5)));
+    let mut world = hittable::HittableList::new();
+
+    world.push(&sphere_1);
+    world.push(&sphere_3);
+    world.push(&sphere_4);
+    // world.push(&sphere_2);
 
     // Camera
     // TODO: Make the camera a struct
     let focal_length = 1.0;
     let viewport_height = 2f32;
-    let viewport_width = viewport_height * ((image_width / image_height) as f32);
+    let viewport_width = viewport_height * (image_width as f32 / image_height as f32);
     let camera_center = Rc::from(vec3::Point3::from((0., 0., 0.)));
 
     // Viewport vectors
@@ -67,8 +79,8 @@ fn main() {
         for i in 0..image_width {
             let pixel_center = pixel00 + (pixel_delta_u * i) + (pixel_delta_v * j);
             let raydir = pixel_center - camera_center.as_ref();
-            let r = ray::Ray::new(raydir, Rc::clone(&camera_center));
-            let pixel = ray_color(r);
+            let r = ray::Ray::new(raydir, &camera_center);
+            let pixel = ray_color(r, &world);
 
             println!("{}", pixel);
         }

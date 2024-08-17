@@ -10,6 +10,13 @@ impl Sphere {
     }
 }
 
+impl From<(f32, f32, f32, f32)> for Sphere {
+    fn from(value: (f32, f32, f32, f32)) -> Self {
+        let (x, y, z, r) = value;
+        Sphere::new(vec3::Vec3(x, y, z), r)
+    }
+}
+
 impl hittable::Hittable for Sphere {
     fn hit(
         &self,
@@ -47,5 +54,24 @@ impl hittable::Hittable for Sphere {
             t,
             r,
         ))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use hittable::Hittable;
+
+    use super::*;
+    use crate::ray::Ray;
+    use std::rc::Rc;
+
+    #[test]
+    fn test_basic_hit() {
+        let origin = Rc::new(vec3::Vec3(0., 0., 0.));
+        let ray = Ray::new(vec3::Vec3(1., 1., 1.), &origin);
+
+        let sphere = Sphere::from((5., 5., 5., 0.5));
+
+        assert!(sphere.hit(&ray, 0., 100.).is_some());
     }
 }
