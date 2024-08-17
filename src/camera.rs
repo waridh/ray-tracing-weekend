@@ -6,53 +6,62 @@ const ZERO_TO_INFINITY: Range<f32> = 0f32..INFINITY;
 pub struct Camera {
     pub aspect_ratio: f32,
     pub image_width: usize,
-}
-
-impl Default for Camera {
-    fn default() -> Self {
-        Camera {
-            aspect_ratio: 1f32,
-            image_width: 100,
-        }
-    }
+    image_height: usize,
+    pixel00: vec3::Vec3,
+    pixel_delta_u: vec3::Vec3,
+    pixel_delta_v: vec3::Vec3,
+    center: Rc<vec3::Vec3>,
 }
 
 impl Camera {
-    /// Reders the scene with side-effects going straight to stdout
-    /// A buffer writer would improve the performance of this function
-    pub fn render(&self, world: &impl Hittable) {
-        // Unclear currently if this could be an if let.
-        let image_height_: usize = ((self.image_width as f32) / self.aspect_ratio) as usize;
-        let image_height: usize = if image_height_ < 1 { 1 } else { image_height_ };
-        let focal_length = 1.0;
+    pub fn new(aspect_ratio: f32, image_width: usize, focal_length: f32) -> Self {
+        let image_height = match ((image_width as f32) / aspect_ratio) as usize {
+            x if x < 1 => 1,
+            x => x,
+        };
+
         let viewport_height = 2f32;
-        let viewport_width = viewport_height * (self.image_width as f32 / image_height as f32);
-        let camera_center = Rc::from(vec3::Point3::from((0., 0., 0.)));
+        let viewport_width = viewport_height * (image_width as f32 / image_height as f32);
+        let center = Rc::from(vec3::Point3::from((0., 0., 0.)));
 
         // Viewport vectors
         let viewport_u = vec3::Vec3(viewport_width, 0., 0.);
         let viewport_v = vec3::Vec3(0., -viewport_height, 0.);
 
         // Calculating pixel delta
-        let pixel_delta_u = viewport_u / self.image_width;
+        let pixel_delta_u = viewport_u / image_width;
         let pixel_delta_v = viewport_v / image_height;
 
         // Getting the location of the top left corner of the viewport
-        let viewport_upper_left: vec3::Vec3 = camera_center.as_ref()
+        let viewport_upper_left: vec3::Vec3 = center.as_ref()
             - vec3::Vec3(0., 0., focal_length)
             - (viewport_u / 2.)
             - (viewport_v / 2.);
         let pixel00 = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * 0.5;
 
+        Camera {
+            aspect_ratio,
+            image_width,
+            image_height,
+            pixel00,
+            pixel_delta_u,
+            pixel_delta_v,
+            center,
+        }
+    }
+    /// Reders the scene with side-effects going straight to stdout
+    /// A buffer writer would improve the performance of this function
+    pub fn render(&self, world: &impl Hittable) {
         // render
 
-        println!("P3\n{} {}\n255", self.image_width, image_height);
+        println!("P3\n{} {}\n255", self.image_width, self.image_height);
 
-        for j in (0..image_height).progress() {
+        for j in (0..self.image_height).progress() {
             for i in 0..self.image_width {
-                let pixel_center = pixel00 + (pixel_delta_u * i) + (pixel_delta_v * j);
-                let raydir = pixel_center - camera_center.as_ref();
-                let r = ray::Ray::new(raydir, &camera_center);
+                let pixel_center =
+                    self.pixel00 + (self.pixel_delta_u * i) + (self.pixel_delta_v * j);
+                let raydir = pixel_center - self.center.as_ref();
+                let r = ray::Ray::new(raydir, &self.center);
                 let pixel = Camera::ray_color(r, world);
 
                 println!("{}", pixel);
