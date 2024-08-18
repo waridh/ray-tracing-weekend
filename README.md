@@ -51,3 +51,7 @@ Program able to generate basic matte shadows.
 ### Other materials
 
 ![Metal materials and Lambertian materials in the same scene (with colors)](./image_archive/materials.jpeg)
+
+#### Fuzzy metals
+
+![Now with fuzziness on the metals](./image_archive/fuzzy_metal.jpeg)

@@ -32,9 +32,9 @@ fn main() {
     let material_center: Rc<dyn Material> =
         Rc::new(material::Lambertian::new(color::Color::new(0.1, 0.2, 0.5)));
     let material_left: Rc<dyn Material> =
-        Rc::new(material::Metal::new(color::Color::new(0.8, 0.8, 0.8)));
+        Rc::new(material::Metal::new(color::Color::new(0.8, 0.8, 0.8), 0.2));
     let material_right: Rc<dyn Material> =
-        Rc::new(material::Metal::new(color::Color::new(0.8, 0.6, 0.2)));
+        Rc::new(material::Metal::new(color::Color::new(0.8, 0.6, 0.2), 1.0));
 
     // World
 
@@ -49,12 +49,12 @@ fn main() {
         &material_ground,
     ));
     let sphere_3: Rc<dyn Hittable> = Rc::new(sphere::Sphere::new(
-        Vec3::new(-1., 1., -1.),
-        0.5,
+        Vec3::new(-1., -0.25, -1.),
+        0.25,
         &material_left,
     ));
     let sphere_4: Rc<dyn Hittable> = Rc::new(sphere::Sphere::new(
-        Vec3::new(1., 1., -1.),
+        Vec3::new(1., 0., -1.),
         0.5,
         &material_right,
     ));

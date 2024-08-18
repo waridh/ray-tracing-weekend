@@ -1,12 +1,12 @@
 use crate::{
     color::Color,
     hittable::Hittable,
-    ray::{self, Ray},
-    vec3::{self, Vec3},
+    ray::{self},
+    vec3::{self},
 };
 use indicatif::{ProgressBar, ProgressStyle};
 use rand::{self, Rng};
-use std::{f32::INFINITY, rc::Rc};
+use std::f32::INFINITY;
 
 pub struct Camera {
     pub aspect_ratio: f32,
@@ -102,7 +102,7 @@ impl Camera {
             + (self.pixel_delta_u * ((i as f32) + offset[0]))
             + (self.pixel_delta_v * ((j as f32) + offset[1]));
         let raydir = pixel_center - self.center;
-        ray::Ray::new(raydir, self.center.clone())
+        ray::Ray::new(raydir, self.center)
     }
 
     fn sample_square(&mut self) -> vec3::Vec3 {
