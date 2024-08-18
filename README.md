@@ -19,6 +19,12 @@ cargo run > image.ppm
 
 Program able to generate basic matte shadows.
 
+## Features
+
+- [ ] Add Lambertian Reflection
+- [ ] Add new materials
+- [ ] Allow materials to be colored
+
 ## Outputs
 
 ### Shading by Normal
