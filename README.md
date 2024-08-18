@@ -23,7 +23,7 @@ Program able to generate basic matte shadows.
 
 - [X] Add Lambertian Reflection
 - [X] Allow materials to be colored
-- [-] Add new materials
+- [ ] Add new materials
   - [X] Add metals
   - [ ] Add fuzzy metals
   - [ ] Add glass metals
