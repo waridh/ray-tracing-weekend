@@ -21,9 +21,12 @@ Program able to generate basic matte shadows.
 
 ## Features
 
-- [ ] Add Lambertian Reflection
-- [ ] Add new materials
-- [ ] Allow materials to be colored
+- [X] Add Lambertian Reflection
+- [X] Allow materials to be colored
+- [-] Add new materials
+  - [X] Add metals
+  - [ ] Add fuzzy metals
+  - [ ] Add glass metals
 
 ## Outputs
 
@@ -44,3 +47,7 @@ Program able to generate basic matte shadows.
 ### Basic Working Matt Shadows
 
 ![Basic Shadows](./image_archive/basic_shadows.jpeg)
+
+### Other materials
+
+![Metal materials and Lambertian materials in the same scene (with colors)](./image_archive/materials.jpeg)

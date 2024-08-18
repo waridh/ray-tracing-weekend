@@ -1,4 +1,4 @@
-use rand::{self, distributions::uniform::SampleRange, Rng};
+use rand::{self, Rng};
 use std::{fmt, ops};
 
 #[derive(Debug, PartialEq, Clone, Default, Copy)]
@@ -44,7 +44,6 @@ impl Vec3 {
     }
 
     pub fn random_unit_vector() -> Vec3 {
-        let mut rng = rand::thread_rng();
         Vec3::random_in_unit_sphere().unit_vector()
     }
 
@@ -87,6 +86,17 @@ impl Vec3 {
     /// Tested
     pub fn unit_vector(&self) -> Vec3 {
         self / self.length()
+    }
+
+    /// Returns true if all axis of the vector is very close to zero, else
+    /// return false
+    pub fn near_zero(&self) -> bool {
+        let v = 0.0000001f32;
+        self.0 < v && self.1 < v && self.2 < v
+    }
+
+    pub fn reflect(&self, normal: &Vec3) -> Vec3 {
+        self - 2. * self.dot(normal) * normal
     }
 }
 
@@ -213,6 +223,23 @@ impl ops::Mul<Vec3> for f32 {
 }
 
 /// Implementing scalar multiplication
+/// Tested
+impl ops::Mul<f32> for &Vec3 {
+    type Output = Vec3;
+    fn mul(self, rhs: f32) -> Self::Output {
+        Vec3(self.0 * rhs, self.1 * rhs, self.2 * rhs)
+    }
+}
+
+/// Implementing scalar multiplication
+impl ops::Mul<&Vec3> for f32 {
+    type Output = Vec3;
+    fn mul(self, rhs: &Vec3) -> Self::Output {
+        Vec3(rhs.0 * self, rhs.1 * self, rhs.2 * self)
+    }
+}
+
+/// Implementing scalar multiplication
 impl ops::Mul<Vec3> for usize {
     type Output = Vec3;
     fn mul(self, rhs: Vec3) -> Self::Output {
@@ -317,6 +344,7 @@ impl ops::IndexMut<usize> for Vec3 {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     macro_rules! assert_delta {
@@ -350,6 +378,19 @@ mod tests {
         assert_eq!(input[0], 1.);
         assert_eq!(input[1], 2.);
         assert_eq!(input[2], 3.);
+    }
+
+    #[test]
+    fn vec3_near_zero() {
+        let tests = [
+            (Vec3(1., 1., 1.), false),
+            (Vec3(0., 0., 0.), true),
+            (Vec3(0.001, 0., 0.), false),
+        ];
+
+        for (input, expected) in tests {
+            assert_eq!(input.near_zero(), expected);
+        }
     }
 
     #[test]

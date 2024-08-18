@@ -1,26 +1,38 @@
-use crate::{hittable, vec3};
-use std::ops::Range;
+use crate::{
+    color::Color,
+    hittable,
+    material::{Lambertian, Material},
+    vec3,
+};
+use std::{ops::Range, rc::Rc};
 pub struct Sphere {
     center: vec3::Point3,
     radius: f32,
+    material: Rc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: vec3::Point3, radius: f32) -> Self {
-        Sphere { center, radius }
+    pub fn new(center: vec3::Point3, radius: f32, material: &Rc<dyn Material>) -> Self {
+        let material = Rc::clone(material);
+        Sphere {
+            center,
+            radius,
+            material,
+        }
     }
 }
 
 impl From<(f32, f32, f32, f32)> for Sphere {
     fn from(value: (f32, f32, f32, f32)) -> Self {
         let (x, y, z, r) = value;
-        Sphere::new(vec3::Vec3(x, y, z), r)
+        let material: Rc<dyn Material> = Rc::new(Lambertian::new(Color::black()));
+        Sphere::new(vec3::Vec3(x, y, z), r, &material)
     }
 }
 
 impl hittable::Hittable for Sphere {
     fn hit(&self, r: &crate::ray::Ray, ray_interval: &Range<f32>) -> Option<hittable::HitRecord> {
-        let oc = self.center - r.origin.as_ref();
+        let oc = self.center - r.origin;
         let a = r.direction.dot(&r.direction);
         let b = r.direction.dot(&oc);
         let c = oc.dot(&oc) - self.radius * self.radius;
@@ -49,6 +61,7 @@ impl hittable::Hittable for Sphere {
             (p - self.center) / self.radius,
             t,
             r,
+            &self.material,
         ))
     }
 }
@@ -59,12 +72,11 @@ mod test {
 
     use super::*;
     use crate::ray::Ray;
-    use std::rc::Rc;
 
     #[test]
     fn test_basic_hit() {
-        let origin = Rc::new(vec3::Vec3(0., 0., 0.));
-        let ray = Ray::new(vec3::Vec3(1., 1., 1.), &origin);
+        let origin = vec3::Vec3(0., 0., 0.);
+        let ray = Ray::new(vec3::Vec3(1., 1., 1.), origin);
 
         let sphere = Sphere::from((5., 5., 5., 0.5));
 
@@ -73,8 +85,8 @@ mod test {
 
     #[test]
     fn test_range_miss() {
-        let origin = Rc::new(vec3::Vec3(0., 0., 0.));
-        let ray = Ray::new(vec3::Vec3(1., 1., 1.), &origin);
+        let origin = vec3::Vec3(0., 0., 0.);
+        let ray = Ray::new(vec3::Vec3(1., 1., 1.), origin);
 
         let sphere = Sphere::from((5., 5., 5., 0.5));
 
@@ -83,8 +95,8 @@ mod test {
 
     #[test]
     fn test_range_miss_2() {
-        let origin = Rc::new(vec3::Vec3(0., 0., 0.));
-        let ray = Ray::new(vec3::Vec3(1., 1., 1.), &origin);
+        let origin = vec3::Vec3(0., 0., 0.);
+        let ray = Ray::new(vec3::Vec3(1., 1., 1.), origin);
 
         let sphere = Sphere::from((-5., -5., -5., 0.5));
 

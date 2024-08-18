@@ -1,22 +1,38 @@
-use crate::{ray, vec3};
-use std::{ops::Range, rc};
+use crate::{
+    color::Color,
+    material::{Lambertian, Material},
+    ray, vec3,
+};
+use std::{
+    ops::Range,
+    rc::{self, Rc},
+};
 
 pub struct HitRecord {
     pub p: vec3::Point3,
     pub normal: vec3::Vec3,
     pub t: f32,
     pub front_face: bool,
+    pub material: rc::Rc<dyn Material>,
 }
 
 impl HitRecord {
-    pub fn new(p: vec3::Point3, normal: vec3::Vec3, t: f32, r: &ray::Ray) -> Self {
+    pub fn new(
+        p: vec3::Point3,
+        normal: vec3::Vec3,
+        t: f32,
+        r: &ray::Ray,
+        material: &rc::Rc<dyn Material>,
+    ) -> Self {
         let front_face = r.direction.dot(&normal) < 0.;
         let normal = if front_face { normal } else { -normal };
+        let material = rc::Rc::clone(material);
         HitRecord {
             p,
             normal,
             t,
             front_face,
+            material,
         }
     }
 }
@@ -34,18 +50,17 @@ impl HittableList {
         HittableList { objects: vec![] }
     }
 
-    pub fn push<T>(&mut self, value: &rc::Rc<T>)
-    where
-        T: Hittable + 'static,
-    {
-        let rc_value = rc::Rc::clone(value);
+    pub fn push(&mut self, value: &rc::Rc<dyn Hittable>) {
+        let rc_value: Rc<dyn Hittable> = rc::Rc::clone(value);
         self.objects.push(rc_value);
     }
 
+    #[allow(dead_code)]
     pub fn clear(&mut self) {
         self.objects.clear();
     }
 
+    #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.objects.len()
     }
@@ -53,8 +68,14 @@ impl HittableList {
 
 impl Hittable for HittableList {
     fn hit(&self, r: &ray::Ray, ray_interval: &Range<f32>) -> Option<HitRecord> {
-        let mut hit_record: HitRecord =
-            HitRecord::new(vec3::Vec3(0., 0., 0.), vec3::Vec3(0., 0., 0.), 0., r);
+        let default_mat: Rc<dyn Material> = Rc::new(Lambertian::new(Color::black()));
+        let mut hit_record: HitRecord = HitRecord::new(
+            vec3::Vec3(0., 0., 0.),
+            vec3::Vec3(0., 0., 0.),
+            0.,
+            r,
+            &default_mat,
+        );
         let mut closest_so_far = ray_interval.clone();
         let mut hit_something = false;
         for hit_obj_rc in self.objects.iter() {
@@ -94,8 +115,8 @@ mod test {
     #[test]
     fn create_list() {
         let mut list = HittableList::new();
-        let item_1 = create_rc_sphere(0., 1., 2., 50.);
-        let item_2 = create_rc_sphere(100., 1., 2., 1.);
+        let item_1: Rc<dyn Hittable> = create_rc_sphere(0., 1., 2., 50.);
+        let item_2: Rc<dyn Hittable> = create_rc_sphere(100., 1., 2., 1.);
 
         list.push(&item_1);
         list.push(&item_2);
@@ -107,8 +128,8 @@ mod test {
     #[test]
     fn clear_list() {
         let mut list = HittableList::new();
-        let item_1 = create_rc_sphere(0., 1., 2., 50.);
-        let item_2 = create_rc_sphere(100., 1., 2., 1.);
+        let item_1: Rc<dyn Hittable> = create_rc_sphere(0., 1., 2., 50.);
+        let item_2: Rc<dyn Hittable> = create_rc_sphere(100., 1., 2., 1.);
 
         list.push(&item_1);
         list.push(&item_2);
@@ -123,12 +144,12 @@ mod test {
     #[test]
     fn hit_one_thing() {
         let mut list = HittableList::new();
-        let item_1 = create_rc_sphere(0., 1., 2., 0.25);
-        let item_2 = create_rc_sphere(100., 1., 2., 1.);
+        let item_1: Rc<dyn Hittable> = create_rc_sphere(0., 1., 2., 0.25);
+        let item_2: Rc<dyn Hittable> = create_rc_sphere(100., 1., 2., 1.);
 
-        let origin = rc::Rc::new(vec3::Vec3(0., 0., 0.));
+        let origin = vec3::Vec3(0., 0., 0.);
 
-        let r = Ray::new(vec3::Vec3(0., 0.5, 1.), &origin);
+        let r = Ray::new(vec3::Vec3(0., 0.5, 1.), origin);
 
         list.push(&item_1);
         list.push(&item_2);
