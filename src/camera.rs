@@ -1,20 +1,19 @@
 use crate::{color, hittable::Hittable, ray, vec3};
-use indicatif::ProgressIterator;
-use rand::{self, rngs::ThreadRng, Rng};
-use std::{f32::INFINITY, ops::Range, rc::Rc};
+use indicatif::{ProgressBar, ProgressStyle};
+use rand::{self, Rng};
+use std::{f32::INFINITY, rc::Rc};
 
-const ZERO_TO_INFINITY: Range<f32> = 0f32..INFINITY;
 pub struct Camera {
     pub aspect_ratio: f32,
     pub image_width: usize,
     pub samples_per_pixel: usize,
+    pub reflection_depth: usize,
     image_height: usize,
     pixel00: vec3::Vec3,
     pixel_delta_u: vec3::Vec3,
     pixel_delta_v: vec3::Vec3,
     center: Rc<vec3::Vec3>,
     pixel_sample_scale: f32,
-    rng: ThreadRng,
 }
 
 impl Camera {
@@ -23,8 +22,8 @@ impl Camera {
         image_width: usize,
         focal_length: f32,
         samples_per_pixel: usize,
+        reflection_depth: usize,
     ) -> Self {
-        let rng = rand::thread_rng();
         let image_height = match ((image_width as f32) / aspect_ratio) as usize {
             x if x < 1 => 1,
             x => x,
@@ -61,7 +60,7 @@ impl Camera {
             pixel_delta_v,
             center,
             pixel_sample_scale,
-            rng,
+            reflection_depth,
         }
     }
 
@@ -69,20 +68,29 @@ impl Camera {
     /// A buffer writer would improve the performance of this function
     pub fn render(&mut self, world: &impl Hittable) {
         // render
+        let bar = ProgressBar::new(self.image_height as u64);
+        let prog_style = ProgressStyle::with_template(
+            "[{elapsed_precise}] {wide_bar:.cyan/blue} {pos:>7}/{len:7} {msg} [eta {eta_precise}]",
+        )
+        .unwrap()
+        .tick_chars("#+-");
+        bar.set_style(prog_style);
 
         println!("P3\n{} {}\n255", self.image_width, self.image_height);
 
-        for j in (0..self.image_height).progress() {
+        for j in 0..self.image_height {
             for i in 0..self.image_width {
                 let mut pixel = color::Color::from_args(0., 0., 0.);
                 for _ in 0..self.samples_per_pixel {
                     let r = self.get_ray(i, j);
-                    pixel += Camera::ray_color(r, world);
+                    pixel += Camera::ray_color(r, self.reflection_depth, world);
                 }
 
                 println!("{}", pixel * self.pixel_sample_scale);
             }
+            bar.inc(1);
         }
+        bar.finish();
     }
 
     fn get_ray(&mut self, i: usize, j: usize) -> ray::Ray {
@@ -95,20 +103,21 @@ impl Camera {
     }
 
     fn sample_square(&mut self) -> vec3::Vec3 {
-        vec3::Vec3(
-            self.rng.gen_range(-0.5..0.5),
-            self.rng.gen_range(-0.5..0.5),
-            0.,
-        )
+        let mut rng = rand::thread_rng();
+        vec3::Vec3(rng.gen_range(-0.5..0.5), rng.gen_range(-0.5..0.5), 0.)
     }
 
-    fn ray_color(r: ray::Ray, world: &impl Hittable) -> color::Color {
-        match world.hit(&r, &ZERO_TO_INFINITY) {
+    fn ray_color(r: ray::Ray, depth: usize, world: &impl Hittable) -> color::Color {
+        if depth == 0 {
+            return color::Color::from_args(0., 0., 0.);
+        }
+        match world.hit(&r, &(0.001..INFINITY)) {
             Some(t) => {
-                let m = 0.5 * (vec3::Vec3(1., 1., 1.) + t.normal.unit_vector());
-                color::Color::from(m)
+                let reflection_dir = t.normal.random_on_hemisphere();
+                0.5 * Camera::ray_color(ray::Ray::new(reflection_dir, &r.origin), depth - 1, world)
             }
             None => {
+                // This is the background branch
                 let unit_dir = r.direction.unit_vector();
                 let a = 0.5 * (unit_dir.1 + 1.);
                 color::Color::from_args(1., 1., 1.) * (1. - a)

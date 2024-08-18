@@ -1,3 +1,4 @@
+use rand::{self, distributions::uniform::SampleRange, Rng};
 use std::{fmt, ops};
 
 #[derive(Debug, PartialEq, Clone, Default, Copy)]
@@ -13,6 +14,47 @@ impl Vec3 {
         let b: f32 = b.into();
         let c: f32 = c.into();
         Vec3(a, b, c)
+    }
+
+    pub fn random_range(range: ops::Range<f32>) -> Vec3 {
+        let mut rng = rand::thread_rng();
+        Vec3(
+            rng.gen_range(range.clone()),
+            rng.gen_range(range.clone()),
+            rng.gen_range(range.clone()),
+        )
+    }
+
+    pub fn random() -> Vec3 {
+        let mut rng = rand::thread_rng();
+        Vec3(
+            rng.gen_range(0f32..1f32),
+            rng.gen_range(0f32..1f32),
+            rng.gen_range(0f32..1f32),
+        )
+    }
+
+    fn random_in_unit_sphere() -> Vec3 {
+        loop {
+            match Vec3::random_range(-1f32..1f32) {
+                p if p.squared_length() < 1. => return p,
+                _ => continue,
+            }
+        }
+    }
+
+    pub fn random_unit_vector() -> Vec3 {
+        let mut rng = rand::thread_rng();
+        Vec3::random_in_unit_sphere().unit_vector()
+    }
+
+    pub fn random_on_hemisphere(&self) -> Vec3 {
+        let on_unit_sphere = Vec3::random_unit_vector();
+        if self.dot(&on_unit_sphere) > 0. {
+            on_unit_sphere
+        } else {
+            -on_unit_sphere
+        }
     }
 
     /// Tested

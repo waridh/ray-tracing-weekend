@@ -17,8 +17,7 @@ cargo run > image.ppm
 
 ## Program Capabilities
 
-Currently, this program will generate a sphere in the middle of a vertical
-gradient that is shaded based on the surface normal vectors.
+Program able to generate basic matte shadows.
 
 ## Outputs
 
@@ -35,3 +34,7 @@ gradient that is shaded based on the surface normal vectors.
 ### With Anti-Aliasing
 
 ![Anti-aliased output](./image_archive/antialiased.jpeg)
+
+### Basic Working Matt Shadows
+
+![Basic Shadows](./image_archive/basic_shadows.jpeg)
