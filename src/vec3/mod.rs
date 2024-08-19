@@ -98,6 +98,16 @@ impl Vec3 {
     pub fn reflect(&self, normal: &Vec3) -> Vec3 {
         self - 2. * self.dot(normal) * normal
     }
+
+    /// TODO: Test this method
+    pub fn refract(&self, normal: &Vec3, eta_ratio: f32) -> Vec3 {
+        let unit_self = self.unit_vector();
+        let unit_normal = normal.unit_vector();
+        let cos_theta = (-unit_self).dot(&unit_normal).min(1.);
+        let perpendicular = eta_ratio * (unit_self + (cos_theta * unit_normal));
+        let parallel = (1. - perpendicular.squared_length()).sqrt() * unit_normal;
+        perpendicular + parallel
+    }
 }
 
 impl From<usize> for Vec3 {
