@@ -23,10 +23,13 @@ Program able to generate basic matte shadows.
 
 - [X] Add Lambertian Reflection
 - [X] Allow materials to be colored
-- [ ] Add new materials
+- [X] Add new materials
   - [X] Add metals
-  - [ ] Add fuzzy metals
-  - [ ] Add glass metals
+  - [X] Add fuzzy metals
+  - [X] Add glass metals
+- [ ] Make the camera adjustable
+- [ ] Make a threaded computation mode
+- [ ] Make a wgpu mode
 
 ## Outputs
 
@@ -55,3 +58,7 @@ Program able to generate basic matte shadows.
 #### Fuzzy metals
 
 ![Now with fuzziness on the metals](./image_archive/fuzzy_metal.jpeg)
+
+#### Hollow glass
+
+![Hollow glass sphere](./image_archive/hollow_glass.jpeg)

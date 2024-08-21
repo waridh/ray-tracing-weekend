@@ -1,3 +1,5 @@
+use rand::Rng;
+
 use crate::{color::Color, hittable, ray::Ray, vec3::Vec3};
 use std::rc::Rc;
 pub trait Material {
@@ -60,7 +62,6 @@ impl Material for Metal {
     }
 }
 
-#[allow(dead_code)]
 pub struct Dielectric {
     refractive_index: f32,
     attenuation: Color,
@@ -68,6 +69,7 @@ pub struct Dielectric {
 
 impl Dielectric {
     pub fn new(refractive_index: f32) -> Self {
+        // Currently fixed attenuation of 1
         let attenuation = Color::new(1., 1., 1.);
         Dielectric {
             refractive_index,
@@ -78,13 +80,34 @@ impl Dielectric {
 
 impl Material for Dielectric {
     fn scatter(&self, r_in: &Ray, hit_rec: &hittable::HitRecord) -> Option<(Color, Ray)> {
+        let mut rng = rand::thread_rng();
+        let unit_r_in_dir = r_in.direction.unit_vector();
         let refractive_index = if hit_rec.front_face {
+            // Air into the material
             1.0 / self.refractive_index
         } else {
+            // Material into the air
             self.refractive_index
         };
 
-        let refracted = r_in.direction.refract(&hit_rec.normal, refractive_index);
-        Some((self.attenuation.clone(), Ray::new(refracted, hit_rec.p)))
+        let cos_theta = ((-unit_r_in_dir).dot(&hit_rec.normal)).min(1.);
+        let sin_theta = (1. - cos_theta * cos_theta).sqrt();
+
+        let cannot_refract = refractive_index * sin_theta > 1.;
+
+        let scatter = if cannot_refract
+            || reflectance(cos_theta, self.refractive_index) > rng.gen_range(-1f32..1f32)
+        {
+            unit_r_in_dir.reflect(&hit_rec.normal)
+        } else {
+            unit_r_in_dir.refract(&hit_rec.normal, refractive_index)
+        };
+
+        Some((self.attenuation.clone(), Ray::new(scatter, hit_rec.p)))
     }
+}
+fn reflectance(cosine: f32, refraction_index: f32) -> f32 {
+    let r0 = (1. - refraction_index) / (1. + refraction_index);
+    let r02 = r0 * r0;
+    r02 + (1. - r02) * ((1. - cosine).powi(5))
 }

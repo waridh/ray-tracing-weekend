@@ -99,13 +99,16 @@ impl Vec3 {
         self - 2. * self.dot(normal) * normal
     }
 
-    /// TODO: Test this method
+    /// This method does a naive snell's law operation on the input vectors.
+    /// This method will not handle total internal reflection.
+    ///
+    /// Invariant:
+    ///     - Assumes that input vectors are both unit vectors
+    /// Tested
     pub fn refract(&self, normal: &Vec3, eta_ratio: f32) -> Vec3 {
-        let unit_self = self.unit_vector();
-        let unit_normal = normal.unit_vector();
-        let cos_theta = (-unit_self).dot(&unit_normal).min(1.);
-        let perpendicular = eta_ratio * (unit_self + (cos_theta * unit_normal));
-        let parallel = (1. - perpendicular.squared_length()).sqrt() * unit_normal;
+        let cos_theta: f32 = (-self).dot(normal).min(1.);
+        let perpendicular = eta_ratio * (self + (cos_theta * normal));
+        let parallel = (-(1. - perpendicular.squared_length()).abs().sqrt()) * normal;
         perpendicular + parallel
     }
 }
@@ -201,6 +204,13 @@ impl ops::Sub<&Vec3> for Vec3 {
 }
 
 impl ops::Neg for Vec3 {
+    type Output = Vec3;
+    fn neg(self) -> Self::Output {
+        Vec3(-self.0, -self.1, -self.2)
+    }
+}
+
+impl ops::Neg for &Vec3 {
     type Output = Vec3;
     fn neg(self) -> Self::Output {
         Vec3(-self.0, -self.1, -self.2)
@@ -354,6 +364,8 @@ impl ops::IndexMut<usize> for Vec3 {
 
 #[cfg(test)]
 mod tests {
+
+    use std::f32::consts::PI;
 
     use super::*;
 
@@ -619,5 +631,61 @@ mod tests {
 
         let output = format!("{}", input);
         assert_eq!(output.as_str(), expected);
+    }
+
+    #[test]
+    fn vec3_refract_basic() {
+        let input = Vec3(1., -1., 0.).unit_vector();
+        let normal = Vec3(0., 1., 0.);
+        let eta = 1.;
+        let eta_prime = 1.;
+        let sin_theta = (eta / eta_prime) * (PI / 4.).sin();
+        let cos_theta = (1. - (sin_theta * sin_theta)).sqrt();
+
+        let expected = Vec3(sin_theta, -cos_theta, 0.);
+
+        assert_eq!(input.refract(&normal, eta / eta_prime), expected);
+    }
+
+    #[test]
+    fn vec3_refract_basic2() {
+        let input = Vec3(-1., -1., 0.).unit_vector();
+        let normal = Vec3(0., 1., 0.);
+        let eta = 1.;
+        let eta_prime = 1.;
+        let sin_theta = (eta / eta_prime) * (PI / 4.).sin();
+        let cos_theta = (1. - (sin_theta * sin_theta)).sqrt();
+
+        let expected = Vec3(-sin_theta, -cos_theta, 0.);
+
+        assert_eq!(input.refract(&normal, eta / eta_prime), expected);
+    }
+
+    #[test]
+    fn vec3_refract_1_5() {
+        let input = Vec3(1., -1., 0.).unit_vector();
+        let normal = Vec3(0., 1., 0.);
+        let eta = 1.;
+        let eta_prime = 1.5;
+        let sin_theta = (eta / eta_prime) * (PI / 4.).sin();
+        let cos_theta = (1. - (sin_theta * sin_theta)).sqrt();
+
+        let expected = Vec3(sin_theta, -cos_theta, 0.);
+
+        assert_eq!(input.refract(&normal, eta / eta_prime), expected);
+    }
+
+    #[test]
+    fn vec3_refract_0_67() {
+        let input = Vec3(1., -1., 0.).unit_vector();
+        let normal = Vec3(0., 1., 0.);
+        let eta = 1.5;
+        let eta_prime = 1.;
+        let sin_theta = (eta / eta_prime) * (PI / 4.).sin();
+        let cos_theta = (1. - (sin_theta * sin_theta)).abs().sqrt();
+
+        let expected = Vec3(sin_theta, -cos_theta, 0.);
+
+        assert_eq!(input.refract(&normal, eta / eta_prime), expected);
     }
 }
