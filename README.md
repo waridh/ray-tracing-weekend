@@ -62,3 +62,7 @@ Program able to generate basic matte shadows.
 #### Hollow glass
 
 ![Hollow glass sphere](./image_archive/hollow_glass.jpeg)
+
+## Resources
+
+[_Ray Tracing in One Weekend_](https://raytracing.github.io/books/RayTracingInOneWeekend.html)
