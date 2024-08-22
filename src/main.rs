@@ -23,6 +23,7 @@ fn main() {
         1.0,
         samples_per_pixel,
         reflection_depth,
+        110.,
     );
 
     // Materials
@@ -44,8 +45,8 @@ fn main() {
         &material_center,
     ));
     let sphere_2: Rc<dyn Hittable> = Rc::new(sphere::Sphere::new(
-        Vec3::new(1.0, -100.5, -1.),
-        100.,
+        Vec3::new(1.0, -1000.5, -1.),
+        1000.,
         &material_ground,
     ));
     let sphere_3: Rc<dyn Hittable> = Rc::new(sphere::Sphere::new(
@@ -63,6 +64,16 @@ fn main() {
         0.5,
         &material_right,
     ));
+    let sphere_5: Rc<dyn Hittable> = Rc::new(sphere::Sphere::new(
+        Vec3::new(0., 0.625, -1.),
+        0.25,
+        &material_glass,
+    ));
+    let sphere_5_inner: Rc<dyn Hittable> = Rc::new(sphere::Sphere::new(
+        Vec3::new(0., 0.625, -1.),
+        0.25,
+        &air_pocket,
+    ));
     let mut world = hittable::HittableList::new();
 
     world.push(&sphere_1);
@@ -70,6 +81,8 @@ fn main() {
     world.push(&sphere_3_inner);
     world.push(&sphere_4);
     world.push(&sphere_2);
+    world.push(&sphere_5);
+    world.push(&sphere_5_inner);
 
     camera.render(&world);
 }
