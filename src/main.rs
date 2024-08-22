@@ -20,10 +20,12 @@ fn main() {
     let mut camera = camera::Camera::new(
         aspect_ratio,
         image_width,
-        1.0,
         samples_per_pixel,
         reflection_depth,
-        110.,
+        30.,
+        Vec3(-2., 2., 1.),
+        Vec3(0., 0., -1.),
+        Vec3(0., 1., 0.),
     );
 
     // Materials
@@ -36,6 +38,8 @@ fn main() {
     let air_pocket: Rc<dyn Material> = Rc::new(material::Dielectric::new(1. / 1.5));
     let material_right: Rc<dyn Material> =
         Rc::new(material::Metal::new(color::Color::new(0.8, 0.6, 0.2), 0.5));
+    let metal_shiny: Rc<dyn Material> =
+        Rc::new(material::Metal::new(color::Color::new(1., 1., 1.), 0.8));
 
     // World
 
@@ -65,14 +69,9 @@ fn main() {
         &material_right,
     ));
     let sphere_5: Rc<dyn Hittable> = Rc::new(sphere::Sphere::new(
-        Vec3::new(0., 0.625, -1.),
+        Vec3::new(0., 0.75, -1.),
         0.25,
-        &material_glass,
-    ));
-    let sphere_5_inner: Rc<dyn Hittable> = Rc::new(sphere::Sphere::new(
-        Vec3::new(0., 0.625, -1.),
-        0.25,
-        &air_pocket,
+        &metal_shiny,
     ));
     let mut world = hittable::HittableList::new();
 
@@ -82,7 +81,6 @@ fn main() {
     world.push(&sphere_4);
     world.push(&sphere_2);
     world.push(&sphere_5);
-    world.push(&sphere_5_inner);
 
     camera.render(&world);
 }

@@ -2,7 +2,7 @@ use crate::{
     color::Color,
     hittable::Hittable,
     ray::{self},
-    vec3::{self},
+    vec3::{self, Point3, Vec3},
 };
 use indicatif::{ProgressBar, ProgressStyle};
 use rand::{self, Rng};
@@ -14,11 +14,13 @@ pub struct Camera {
     pub samples_per_pixel: usize,
     pub reflection_depth: usize,
     pub vfov: f32,
+    pub look_to: Point3,
+    pub vup: Vec3,
     image_height: usize,
-    pixel00: vec3::Vec3,
-    pixel_delta_u: vec3::Vec3,
-    pixel_delta_v: vec3::Vec3,
-    center: vec3::Vec3,
+    pixel00: Vec3,
+    pixel_delta_u: Vec3,
+    pixel_delta_v: Vec3,
+    center: Vec3,
     pixel_sample_scale: f32,
 }
 
@@ -26,26 +28,33 @@ impl Camera {
     pub fn new(
         aspect_ratio: f32,
         image_width: usize,
-        focal_length: f32,
         samples_per_pixel: usize,
         reflection_depth: usize,
         vfov: f32,
+        look_from: Point3,
+        look_to: Point3,
+        vup: Vec3,
     ) -> Self {
         let image_height = match ((image_width as f32) / aspect_ratio) as usize {
             x if x < 1 => 1,
             x => x,
         };
+        let center = look_from;
+        let focal_length = (look_to - center).length();
 
         let fov_theta = vfov.to_radians();
         let h = (fov_theta / 2.).tan();
 
         let viewport_height = 2. * h * focal_length;
         let viewport_width = viewport_height * (image_width as f32 / image_height as f32);
-        let center = vec3::Point3::from((0., 0., 0.));
+
+        let w = (center - look_to).unit_vector();
+        let u = vup.cross(&w).unit_vector();
+        let v = w.cross(&u).unit_vector();
 
         // Viewport vectors
-        let viewport_u = vec3::Vec3(viewport_width, 0., 0.);
-        let viewport_v = vec3::Vec3(0., -viewport_height, 0.);
+        let viewport_u = viewport_width * u;
+        let viewport_v = viewport_height * -v;
 
         // Calculating pixel delta
         let pixel_delta_u = viewport_u / image_width;
@@ -53,7 +62,7 @@ impl Camera {
 
         // Getting the location of the top left corner of the viewport
         let viewport_upper_left: vec3::Vec3 =
-            center - vec3::Vec3(0., 0., focal_length) - (viewport_u / 2.) - (viewport_v / 2.);
+            center - focal_length * w - (viewport_u / 2.) - (viewport_v / 2.);
         let pixel00 = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * 0.5;
 
         let pixel_sample_scale = 1. / (samples_per_pixel as f32);
@@ -70,6 +79,8 @@ impl Camera {
             center,
             pixel_sample_scale,
             reflection_depth,
+            look_to,
+            vup,
         }
     }
 

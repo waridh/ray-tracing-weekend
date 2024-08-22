@@ -63,6 +63,12 @@ Program able to generate basic matte shadows.
 
 ![Hollow glass sphere](./image_archive/hollow_glass.jpeg)
 
+### Camera Adjustments
+
+#### High angle with 30 vfov
+
+![High angle down view of the balls](./image_archive/high_angle_down.jpeg)
+
 ## Resources
 
 [_Ray Tracing in One Weekend_](https://raytracing.github.io/books/RayTracingInOneWeekend.html)
