@@ -21,13 +21,14 @@ Program able to generate basic matte shadows.
 
 ## Features
 
-- [X] Add Lambertian Reflection
-- [X] Allow materials to be colored
-- [X] Add new materials
-  - [X] Add metals
-  - [X] Add fuzzy metals
-  - [X] Add glass metals
-- [ ] Make the camera adjustable
+- [x] Add Lambertian Reflection
+- [x] Allow materials to be colored
+- [x] Add new materials
+  - [x] Add metals
+  - [x] Add fuzzy metals
+  - [x] Add glass metals
+- [x] Make the camera adjustable
+- [ ] Add a defocused effect
 - [ ] Make a threaded computation mode
 - [ ] Make a wgpu mode
 
