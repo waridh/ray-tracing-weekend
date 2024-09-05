@@ -44,7 +44,6 @@ impl Material for Metal {
     fn scatter(&self, r_in: &Ray, hit_rec: &hittable::HitRecord) -> Option<(Color, Ray)> {
         let reflection_dir =
             r_in.direction.reflect(&hit_rec.normal) + (self.fuzz * Vec3::random_unit_vector());
-
         // Catching degenerate scatter direction
         if reflection_dir.dot(&(hit_rec.normal)) > 0. {
             let r_out = Ray::new(reflection_dir, hit_rec.p);
@@ -99,6 +98,7 @@ impl Material for Dielectric {
         Some((self.attenuation.clone(), Ray::new(scatter, hit_rec.p)))
     }
 }
+
 fn reflectance(cosine: f32, refraction_index: f32) -> f32 {
     let r0 = (1. - refraction_index) / (1. + refraction_index);
     let r02 = r0 * r0;

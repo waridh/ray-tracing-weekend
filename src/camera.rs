@@ -8,14 +8,91 @@ use indicatif::{ProgressBar, ProgressStyle};
 use rand::{self, Rng};
 use std::f32::INFINITY;
 
-pub struct Camera {
+pub struct CameraBuilder {
     pub aspect_ratio: f32,
     pub image_width: usize,
     pub samples_per_pixel: usize,
     pub reflection_depth: usize,
     pub vfov: f32,
+    pub look_from: Point3,
     pub look_to: Point3,
     pub vup: Vec3,
+}
+impl Default for CameraBuilder {
+    fn default() -> Self {
+        CameraBuilder {
+            aspect_ratio: 16. / 9.,
+            image_width: 1200,
+            samples_per_pixel: 100,
+            reflection_depth: 50,
+            vfov: 90.,
+            look_from: Vec3::new(0., 0., 0.),
+            look_to: Vec3::new(0., 0., -1.),
+            vup: Vec3::new(0., 1., 0.),
+        }
+    }
+}
+
+impl CameraBuilder {
+    pub fn build(self) -> Camera {
+        let image_height = match ((self.image_width as f32) / self.aspect_ratio) as usize {
+            x if x < 1 => 1,
+            x => x,
+        };
+        let center = self.look_from;
+        let focal_length = (self.look_to - center).length();
+
+        let fov_theta = self.vfov.to_radians();
+        let h = (fov_theta / 2.).tan();
+
+        let viewport_height = 2. * h * focal_length;
+        let viewport_width = viewport_height * (self.image_width as f32 / image_height as f32);
+
+        let w = (center - self.look_to).unit_vector();
+        let u = self.vup.cross(&w).unit_vector();
+        let v = w.cross(&u).unit_vector();
+
+        // Viewport vectors
+        let viewport_u = viewport_width * u;
+        let viewport_v = viewport_height * -v;
+
+        // Calculating pixel delta
+        let pixel_delta_u = viewport_u / self.image_width;
+        let pixel_delta_v = viewport_v / image_height;
+
+        // Getting the location of the top left corner of the viewport
+        let viewport_upper_left: vec3::Vec3 =
+            center - focal_length * w - (viewport_u / 2.) - (viewport_v / 2.);
+        let pixel00 = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * 0.5;
+
+        let pixel_sample_scale = 1. / (self.samples_per_pixel as f32);
+
+        Camera {
+            aspect_ratio: self.aspect_ratio,
+            image_width: self.image_width,
+            samples_per_pixel: self.samples_per_pixel,
+            image_height,
+            vfov: self.vfov,
+            pixel00,
+            pixel_delta_u,
+            pixel_delta_v,
+            center,
+            pixel_sample_scale,
+            reflection_depth: self.reflection_depth,
+            look_to: self.look_to,
+            vup: self.vup,
+        }
+    }
+}
+
+pub struct Camera {
+    aspect_ratio: f32,
+    image_width: usize,
+    samples_per_pixel: usize,
+    reflection_depth: usize,
+    vfov: f32,
+    look_to: Point3,
+    vup: Vec3,
     image_height: usize,
     pixel00: Vec3,
     pixel_delta_u: Vec3,
@@ -25,65 +102,10 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(
-        aspect_ratio: f32,
-        image_width: usize,
-        samples_per_pixel: usize,
-        reflection_depth: usize,
-        vfov: f32,
-        look_from: Point3,
-        look_to: Point3,
-        vup: Vec3,
-    ) -> Self {
-        let image_height = match ((image_width as f32) / aspect_ratio) as usize {
-            x if x < 1 => 1,
-            x => x,
-        };
-        let center = look_from;
-        let focal_length = (look_to - center).length();
-
-        let fov_theta = vfov.to_radians();
-        let h = (fov_theta / 2.).tan();
-
-        let viewport_height = 2. * h * focal_length;
-        let viewport_width = viewport_height * (image_width as f32 / image_height as f32);
-
-        let w = (center - look_to).unit_vector();
-        let u = vup.cross(&w).unit_vector();
-        let v = w.cross(&u).unit_vector();
-
-        // Viewport vectors
-        let viewport_u = viewport_width * u;
-        let viewport_v = viewport_height * -v;
-
-        // Calculating pixel delta
-        let pixel_delta_u = viewport_u / image_width;
-        let pixel_delta_v = viewport_v / image_height;
-
-        // Getting the location of the top left corner of the viewport
-        let viewport_upper_left: vec3::Vec3 =
-            center - focal_length * w - (viewport_u / 2.) - (viewport_v / 2.);
-        let pixel00 = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * 0.5;
-
-        let pixel_sample_scale = 1. / (samples_per_pixel as f32);
-
-        Camera {
-            aspect_ratio,
-            image_width,
-            samples_per_pixel,
-            image_height,
-            vfov,
-            pixel00,
-            pixel_delta_u,
-            pixel_delta_v,
-            center,
-            pixel_sample_scale,
-            reflection_depth,
-            look_to,
-            vup,
-        }
+    /// Generates the builder object
+    pub fn builder() -> CameraBuilder {
+        CameraBuilder::default()
     }
-
     /// Renders the scene with side-effects going straight to stdout
     /// A buffer writer would improve the performance of this function
     pub fn render(&mut self, world: &impl Hittable) {
