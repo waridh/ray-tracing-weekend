@@ -73,7 +73,7 @@ impl Dielectric {
 impl Material for Dielectric {
     fn scatter(&self, r_in: &Ray, hit_rec: &hittable::HitRecord) -> Option<(Color, Ray)> {
         let mut rng = rand::thread_rng();
-        let unit_r_in_dir = r_in.direction.unit_vector();
+        let unit_r_in_dir = r_in.direction.normalize();
         let refractive_index = if hit_rec.front_face {
             // Air into the material
             1.0 / self.refractive_index

@@ -37,14 +37,24 @@ impl Vec3 {
     fn random_in_unit_sphere() -> Vec3 {
         loop {
             match Vec3::random_range(-1f32..1f32) {
-                p if p.squared_length() < 1. => return p,
+                p if p.magnitude_squared() < 1. => return p,
+                _ => continue,
+            }
+        }
+    }
+
+    fn random_in_unit_disk() -> Vec3 {
+        let mut rng = rand::thread_rng();
+        loop {
+            match Vec3::new(rng.gen_range(-1f32..1f32), rng.gen_range(-1f32..1f32), 0.) {
+                p if p.magnitude_squared() < 1. => return p,
                 _ => continue,
             }
         }
     }
 
     pub fn random_unit_vector() -> Vec3 {
-        Vec3::random_in_unit_sphere().unit_vector()
+        Vec3::random_in_unit_sphere().normalize()
     }
 
     pub fn random_on_hemisphere(&self) -> Vec3 {
@@ -57,12 +67,12 @@ impl Vec3 {
     }
 
     /// Tested
-    pub fn length(&self) -> f32 {
-        self.squared_length().sqrt()
+    pub fn magnitude(&self) -> f32 {
+        self.magnitude_squared().sqrt()
     }
 
     /// Tested
-    pub fn squared_length(&self) -> f32 {
+    pub fn magnitude_squared(&self) -> f32 {
         self.0 * self.0 + self.1 * self.1 + self.2 * self.2
     }
 
@@ -84,8 +94,8 @@ impl Vec3 {
 
     /// Returns the unit vector corresponding to the current vector object
     /// Tested
-    pub fn unit_vector(&self) -> Vec3 {
-        self / self.length()
+    pub fn normalize(&self) -> Vec3 {
+        self / self.magnitude()
     }
 
     /// Returns true if all axis of the vector is very close to zero, else
@@ -108,7 +118,7 @@ impl Vec3 {
     pub fn refract(&self, normal: &Vec3, eta_ratio: f32) -> Vec3 {
         let cos_theta: f32 = (-self).dot(normal).min(1.);
         let perpendicular = eta_ratio * (self + (cos_theta * normal));
-        let parallel = (-(1. - perpendicular.squared_length()).abs().sqrt()) * normal;
+        let parallel = (-(1. - perpendicular.magnitude_squared()).abs().sqrt()) * normal;
         perpendicular + parallel
     }
 }
@@ -571,7 +581,7 @@ mod tests {
         let input = Vec3(3., 6., 9.);
         let expected = 126.;
 
-        assert_eq!(input.squared_length(), expected);
+        assert_eq!(input.magnitude_squared(), expected);
     }
 
     #[test]
@@ -579,7 +589,7 @@ mod tests {
         let input = Vec3(3., 6., 9.);
         let expected = 3. * (14f32.sqrt());
 
-        assert_delta!(input.length(), expected, 0.000001);
+        assert_delta!(input.magnitude(), expected, 0.000001);
     }
 
     #[test]
@@ -606,13 +616,13 @@ mod tests {
     fn vec3_unit_vec() {
         let input = Vec3(3., 6., 9.);
         let scalar = 3. * 14f32.sqrt();
-        let res = input.unit_vector();
+        let res = input.normalize();
         let expected = Vec3(3. / scalar, 6. / scalar, 9. / scalar);
 
         assert_delta!(res.0, expected.0, 0.0000001);
         assert_delta!(res.1, expected.1, 0.0000001);
         assert_delta!(res.2, expected.2, 0.0000001);
-        assert_eq!(res.length(), 1.);
+        assert_eq!(res.magnitude(), 1.);
     }
 
     #[test]
@@ -635,7 +645,7 @@ mod tests {
 
     #[test]
     fn vec3_refract_basic() {
-        let input = Vec3(1., -1., 0.).unit_vector();
+        let input = Vec3(1., -1., 0.).normalize();
         let normal = Vec3(0., 1., 0.);
         let eta = 1.;
         let eta_prime = 1.;
@@ -649,7 +659,7 @@ mod tests {
 
     #[test]
     fn vec3_refract_basic2() {
-        let input = Vec3(-1., -1., 0.).unit_vector();
+        let input = Vec3(-1., -1., 0.).normalize();
         let normal = Vec3(0., 1., 0.);
         let eta = 1.;
         let eta_prime = 1.;
@@ -663,7 +673,7 @@ mod tests {
 
     #[test]
     fn vec3_refract_1_5() {
-        let input = Vec3(1., -1., 0.).unit_vector();
+        let input = Vec3(1., -1., 0.).normalize();
         let normal = Vec3(0., 1., 0.);
         let eta = 1.;
         let eta_prime = 1.5;
@@ -677,7 +687,7 @@ mod tests {
 
     #[test]
     fn vec3_refract_0_67() {
-        let input = Vec3(1., -1., 0.).unit_vector();
+        let input = Vec3(1., -1., 0.).normalize();
         let normal = Vec3(0., 1., 0.);
         let eta = 1.5;
         let eta_prime = 1.;

@@ -40,7 +40,7 @@ impl CameraBuilder {
             x => x,
         };
         let center = self.look_from;
-        let focal_length = (self.look_to - center).length();
+        let focal_length = (self.look_to - center).magnitude();
 
         let fov_theta = self.vfov.to_radians();
         let h = (fov_theta / 2.).tan();
@@ -48,9 +48,9 @@ impl CameraBuilder {
         let viewport_height = 2. * h * focal_length;
         let viewport_width = viewport_height * (self.image_width as f32 / image_height as f32);
 
-        let w = (center - self.look_to).unit_vector();
-        let u = self.vup.cross(&w).unit_vector();
-        let v = w.cross(&u).unit_vector();
+        let w = (center - self.look_to).normalize();
+        let u = self.vup.cross(&w).normalize();
+        let v = w.cross(&u).normalize();
 
         // Viewport vectors
         let viewport_u = viewport_width * u;
@@ -162,7 +162,7 @@ impl Camera {
             },
             None => {
                 // This is the background branch
-                let unit_dir = r.direction.unit_vector();
+                let unit_dir = r.direction.normalize();
                 let a = 0.5 * (unit_dir.1 + 1.);
                 Color::new(1., 1., 1.) * (1. - a) + a * Color::new(0.8, 0.5, 1.0)
             }
