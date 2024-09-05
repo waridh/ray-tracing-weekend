@@ -5,15 +5,14 @@ use crate::{
     vec3,
 };
 use std::{ops::Range, rc::Rc};
-pub struct Sphere {
+pub struct Sphere<M: Material> {
     center: vec3::Point3,
     radius: f32,
-    material: Rc<dyn Material>,
+    material: M,
 }
 
-impl Sphere {
-    pub fn new(center: vec3::Point3, radius: f32, material: &Rc<dyn Material>) -> Self {
-        let material = Rc::clone(material);
+impl<M: Material> Sphere<M> {
+    pub fn new(center: vec3::Point3, radius: f32, material: M) -> Self {
         Sphere {
             center,
             radius,
@@ -22,15 +21,15 @@ impl Sphere {
     }
 }
 
-impl From<(f32, f32, f32, f32)> for Sphere {
+impl From<(f32, f32, f32, f32)> for Sphere<Lambertian> {
     fn from(value: (f32, f32, f32, f32)) -> Self {
         let (x, y, z, r) = value;
-        let material: Rc<dyn Material> = Rc::new(Lambertian::new(Color::black()));
-        Sphere::new(vec3::Vec3(x, y, z), r, &material)
+        let material = Lambertian::new(Color::black());
+        Sphere::new(vec3::Vec3(x, y, z), r, material)
     }
 }
 
-impl hittable::Hittable for Sphere {
+impl<M: Material> hittable::Hittable for Sphere<M> {
     fn hit(&self, r: &crate::ray::Ray, ray_interval: &Range<f32>) -> Option<hittable::HitRecord> {
         let oc = self.center - r.origin;
         let a = r.direction.dot(&r.direction);

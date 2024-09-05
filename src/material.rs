@@ -1,15 +1,8 @@
 use rand::Rng;
 
 use crate::{color::Color, hittable, ray::Ray, vec3::Vec3};
-use std::rc::Rc;
-pub trait Material {
+pub trait Material: Sync {
     fn scatter(&self, r_in: &Ray, hit_rec: &hittable::HitRecord) -> Option<(Color, Ray)>;
-}
-
-impl Material for Rc<dyn Material> {
-    fn scatter(&self, r_in: &Ray, hit_rec: &hittable::HitRecord) -> Option<(Color, Ray)> {
-        self.as_ref().scatter(r_in, hit_rec)
-    }
 }
 
 pub struct Lambertian {
