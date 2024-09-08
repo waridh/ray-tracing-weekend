@@ -2,6 +2,8 @@
 
 Ray tracing in one weekend, but it is in Rust. This will not finish in a single weekend.
 
+![Image will many spheres of different materials and sizes scattered on a seemingly flat plane](./image_archive/final_image.jpeg)
+
 ## Running the program
 
 Currently the program will just spit out ppm format image into the terminal. If
@@ -28,8 +30,8 @@ Program able to generate basic matte shadows.
   - [x] Add fuzzy metals
   - [x] Add glass metals
 - [x] Make the camera adjustable
-- [ ] Add a defocused effect
-- [ ] Make a threaded computation mode
+- [x] Add a defocused effect
+- [x] Make a threaded computation mode
 - [ ] Make a wgpu mode
 
 ## Outputs

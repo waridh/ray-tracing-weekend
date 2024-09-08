@@ -128,8 +128,8 @@ fn make_random_world() -> hittable::HittableList {
 fn main() {
     let mut camera_builder = camera::Camera::builder();
     camera_builder.aspect_ratio = 5. / 4.;
-    camera_builder.image_width = 400;
-    camera_builder.samples_per_pixel = 100;
+    camera_builder.image_width = 1200;
+    camera_builder.samples_per_pixel = 500;
     camera_builder.reflection_depth = 50;
     camera_builder.vfov = 20.;
     camera_builder.look_from = Vec3(13., 2., 3.);
