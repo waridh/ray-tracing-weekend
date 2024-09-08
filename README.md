@@ -4,6 +4,31 @@ Ray tracing in one weekend, but it is in Rust. This will not finish in a single 
 
 ![Image will many spheres of different materials and sizes scattered on a seemingly flat plane](./image_archive/final_image.jpeg)
 
+## Features
+
+### Base Features
+
+The features that all projects that are based on ray tracing in one weekend are:
+
+- Rendering of spheres
+- Rendering of reflections and shadows
+- Rendering of refraction
+- Rendering of different materials
+  - lambertian
+  - metals
+  - dielectrics
+- Rendering the scene from different camera positions
+- Rendering different camera field of view
+- Rendering depth of field
+
+### Differences
+
+Instead of using an existing rust library that would implement the vector
+operations required, I implemented those vectors myself to learn how you
+would do so in rust.
+
+These implementation have brief unit tests.
+
 ## Running the program
 
 Currently the program will just spit out ppm format image into the terminal. If
@@ -17,11 +42,7 @@ Here is an example of how to run the program, and save it to a file called `imag
 cargo run > image.ppm
 ```
 
-## Program Capabilities
-
-Program able to generate basic matte shadows.
-
-## Features
+## Tasks
 
 - [x] Add Lambertian Reflection
 - [x] Allow materials to be colored
