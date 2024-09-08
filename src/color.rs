@@ -1,5 +1,5 @@
 use crate::vec3;
-use std::{fmt, ops};
+use std::{fmt, iter, ops};
 
 pub fn linear_to_gamma(linear: f32) -> f32 {
     match linear {
@@ -32,6 +32,12 @@ impl From<vec3::Vec3> for Color {
 impl From<(f32, f32, f32)> for Color {
     fn from(value: (f32, f32, f32)) -> Self {
         Color(vec3::Vec3::from(value))
+    }
+}
+
+impl iter::Sum for Color {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Color::new(0., 0., 0.), |a, e| a + e)
     }
 }
 
@@ -82,9 +88,24 @@ impl ops::Mul<f32> for Color {
     }
 }
 
+impl ops::Mul<f32> for &Color {
+    type Output = Color;
+    fn mul(self, rhs: f32) -> Self::Output {
+        let new_val = (self[0] * rhs, self[1] * rhs, self[2] * rhs);
+        Color::from(new_val)
+    }
+}
+
 impl ops::Mul<Color> for f32 {
     type Output = Color;
     fn mul(self, rhs: Color) -> Self::Output {
+        rhs * self
+    }
+}
+
+impl ops::Mul<&Color> for f32 {
+    type Output = Color;
+    fn mul(self, rhs: &Color) -> Self::Output {
         rhs * self
     }
 }

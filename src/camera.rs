@@ -4,7 +4,7 @@ use crate::{
     ray::{self},
     vec3::{self, Point3, Vec3},
 };
-use indicatif::{ProgressBar, ProgressStyle};
+use indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle};
 use rand::{self, Rng};
 use rayon::prelude::*;
 use std::f32::INFINITY;
@@ -127,24 +127,35 @@ impl Camera {
 
         println!("P3\n{} {}\n255", self.image_width, self.image_height);
 
-        for j in 0..self.image_height {
-            for i in 0..self.image_width {
-                let mut pixel = Color::black();
-                for _ in 0..self.samples_per_pixel {
-                    let r = self.get_ray(i, j);
-                    pixel += Camera::ray_color(r, self.reflection_depth, world);
-                }
+        let pixels = (0..self.image_height)
+            .into_par_iter()
+            .progress_with(bar)
+            .flat_map(|j| {
+                (0..self.image_width)
+                    .map(|i| {
+                        (0..self.samples_per_pixel)
+                            .map(|_| {
+                                let r = self.get_ray(i, j);
+                                Camera::ray_color(r, self.reflection_depth, world)
+                            })
+                            .sum::<Color>()
+                    })
+                    .collect::<Vec<Color>>()
+            })
+            .collect::<Vec<Color>>();
 
-                println!("{}", pixel * self.pixel_sample_scale);
-            }
-            bar.inc(1);
-        }
-        bar.finish();
+        let spinner = ProgressBar::new_spinner();
+        spinner.enable_steady_tick(std::time::Duration::from_millis(100));
+
+        pixels
+            .iter()
+            .progress_with(spinner)
+            .for_each(|e| println!("{}", self.pixel_sample_scale * e));
     }
 
     /// Create a ray from the defocus lens in the camera center, and direct
     /// it at the pixel square
-    fn get_ray(&mut self, i: usize, j: usize) -> ray::Ray {
+    fn get_ray(&self, i: usize, j: usize) -> ray::Ray {
         let offset = self.sample_square();
         let pixel_center = self.pixel00
             + (self.pixel_delta_u * ((i as f32) + offset[0]))
@@ -161,7 +172,7 @@ impl Camera {
         ray::Ray::new(raydir, ray_orig)
     }
 
-    fn sample_square(&mut self) -> vec3::Vec3 {
+    fn sample_square(&self) -> vec3::Vec3 {
         let mut rng = rand::thread_rng();
         vec3::Vec3(rng.gen_range(-0.5..0.5), rng.gen_range(-0.5..0.5), 0.)
     }
@@ -186,9 +197,4 @@ impl Camera {
             }
         }
     }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
 }
