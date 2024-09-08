@@ -29,6 +29,9 @@ would do so in rust.
 
 These implementation have brief unit tests.
 
+The base program will also use [rayon](https://docs.rs/rayon/latest/rayon/) by
+default, since it give substantial performance boost for little work.
+
 ## Running the program
 
 Currently the program will just spit out ppm format image into the terminal. If
