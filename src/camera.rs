@@ -6,6 +6,7 @@ use crate::{
 };
 use indicatif::{ProgressBar, ProgressStyle};
 use rand::{self, Rng};
+use rayon::prelude::*;
 use std::f32::INFINITY;
 
 pub struct CameraBuilder {
@@ -17,6 +18,8 @@ pub struct CameraBuilder {
     pub look_from: Point3,
     pub look_to: Point3,
     pub vup: Vec3,
+    pub defocus_angle: f32,
+    pub focus_distance: f32,
 }
 impl Default for CameraBuilder {
     fn default() -> Self {
@@ -29,6 +32,8 @@ impl Default for CameraBuilder {
             look_from: Vec3::new(0., 0., 0.),
             look_to: Vec3::new(0., 0., -1.),
             vup: Vec3::new(0., 1., 0.),
+            defocus_angle: 0.,
+            focus_distance: 10.,
         }
     }
 }
@@ -39,18 +44,18 @@ impl CameraBuilder {
             x if x < 1 => 1,
             x => x,
         };
+        let pixel_sample_scale = 1. / (self.samples_per_pixel as f32);
         let center = self.look_from;
-        let focal_length = (self.look_to - center).magnitude();
 
         let fov_theta = self.vfov.to_radians();
         let h = (fov_theta / 2.).tan();
 
-        let viewport_height = 2. * h * focal_length;
-        let viewport_width = viewport_height * (self.image_width as f32 / image_height as f32);
+        let viewport_height = 2. * h * self.focus_distance;
+        let viewport_width = viewport_height * ((self.image_width as f32) / (image_height as f32));
 
         let w = (center - self.look_to).normalize();
         let u = self.vup.cross(&w).normalize();
-        let v = w.cross(&u).normalize();
+        let v = w.cross(&u);
 
         // Viewport vectors
         let viewport_u = viewport_width * u;
@@ -61,44 +66,46 @@ impl CameraBuilder {
         let pixel_delta_v = viewport_v / image_height;
 
         // Getting the location of the top left corner of the viewport
-        let viewport_upper_left: vec3::Vec3 =
-            center - focal_length * w - (viewport_u / 2.) - (viewport_v / 2.);
+        let viewport_upper_left =
+            center - (self.focus_distance * w) - (viewport_u / 2.) - (viewport_v / 2.);
         let pixel00 = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * 0.5;
 
-        let pixel_sample_scale = 1. / (self.samples_per_pixel as f32);
+        let lens_dimensions = if self.defocus_angle > 0. {
+            // Camera defocus disk vector
+            let defocus_radius = self.focus_distance * (self.defocus_angle / 2.).to_radians().tan();
+            let lens_u = defocus_radius * u;
+            let lens_v = defocus_radius * v;
+            Some((lens_u, lens_v))
+        } else {
+            None
+        };
 
         Camera {
-            aspect_ratio: self.aspect_ratio,
             image_width: self.image_width,
             samples_per_pixel: self.samples_per_pixel,
             image_height,
-            vfov: self.vfov,
             pixel00,
             pixel_delta_u,
             pixel_delta_v,
             center,
             pixel_sample_scale,
             reflection_depth: self.reflection_depth,
-            look_to: self.look_to,
-            vup: self.vup,
+            lens_dimensions,
         }
     }
 }
 
 pub struct Camera {
-    aspect_ratio: f32,
     image_width: usize,
     samples_per_pixel: usize,
     reflection_depth: usize,
-    vfov: f32,
-    look_to: Point3,
-    vup: Vec3,
     image_height: usize,
     pixel00: Vec3,
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
     center: Vec3,
     pixel_sample_scale: f32,
+    lens_dimensions: Option<(Vec3, Vec3)>,
 }
 
 impl Camera {
@@ -135,13 +142,23 @@ impl Camera {
         bar.finish();
     }
 
+    /// Create a ray from the defocus lens in the camera center, and direct
+    /// it at the pixel square
     fn get_ray(&mut self, i: usize, j: usize) -> ray::Ray {
         let offset = self.sample_square();
         let pixel_center = self.pixel00
             + (self.pixel_delta_u * ((i as f32) + offset[0]))
             + (self.pixel_delta_v * ((j as f32) + offset[1]));
-        let raydir = pixel_center - self.center;
-        ray::Ray::new(raydir, self.center)
+        let ray_orig = match self.lens_dimensions {
+            None => self.center,
+            Some((lens_u, lens_v)) => {
+                let p = Vec3::random_in_unit_disk();
+                self.center + (p[0] * lens_u) + (p[1] * lens_v)
+            }
+        };
+        let raydir = pixel_center - ray_orig;
+
+        ray::Ray::new(raydir, ray_orig)
     }
 
     fn sample_square(&mut self) -> vec3::Vec3 {
@@ -149,6 +166,7 @@ impl Camera {
         vec3::Vec3(rng.gen_range(-0.5..0.5), rng.gen_range(-0.5..0.5), 0.)
     }
 
+    /// Retrieve the final color of a ray traversing through the world
     fn ray_color(r: ray::Ray, depth: usize, world: &impl Hittable) -> Color {
         if depth == 0 {
             return Color::black();
@@ -164,8 +182,13 @@ impl Camera {
                 // This is the background branch
                 let unit_dir = r.direction.normalize();
                 let a = 0.5 * (unit_dir.1 + 1.);
-                Color::new(1., 1., 1.) * (1. - a) + a * Color::new(0.8, 0.5, 1.0)
+                Color::new(1., 1., 1.) * (1. - a) + a * Color::new(0.6, 0.5, 1.0)
             }
         }
     }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
 }

@@ -34,19 +34,10 @@ impl Vec3 {
         )
     }
 
-    fn random_in_unit_sphere() -> Vec3 {
-        loop {
-            match Vec3::random_range(-1f32..1f32) {
-                p if p.magnitude_squared() < 1. => return p,
-                _ => continue,
-            }
-        }
-    }
-
-    fn random_in_unit_disk() -> Vec3 {
+    pub fn random_in_unit_disk() -> Vec3 {
         let mut rng = rand::thread_rng();
         loop {
-            match Vec3::new(rng.gen_range(-1f32..1f32), rng.gen_range(-1f32..1f32), 0.) {
+            match Vec3(rng.gen_range(-1f32..1f32), rng.gen_range(-1f32..1f32), 0.) {
                 p if p.magnitude_squared() < 1. => return p,
                 _ => continue,
             }
@@ -54,9 +45,19 @@ impl Vec3 {
     }
 
     pub fn random_unit_vector() -> Vec3 {
-        Vec3::random_in_unit_sphere().normalize()
+        loop {
+            let rrange = Vec3::random_range(-1f32..1f32);
+            let mag_sq = rrange.magnitude_squared();
+            if mag_sq > 1e-160 && mag_sq <= 1. {
+                return rrange.normalize();
+            } else {
+                continue;
+            }
+        }
     }
 
+    /// Method that will generate a random unit vector in the same hemisphere
+    /// as the direction of the calling vector.
     pub fn random_on_hemisphere(&self) -> Vec3 {
         let on_unit_sphere = Vec3::random_unit_vector();
         if self.dot(&on_unit_sphere) > 0. {

@@ -4,7 +4,7 @@ use crate::{
     material::{Lambertian, Material},
     vec3,
 };
-use std::{ops::Range, rc::Rc};
+use std::ops::Range;
 pub struct Sphere<M: Material> {
     center: vec3::Point3,
     radius: f32,
