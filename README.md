@@ -57,6 +57,7 @@ cargo run > image.ppm
 - [x] Add a defocused effect
 - [x] Make a threaded computation mode
 - [ ] Make a wgpu mode
+- [ ] Add a command line interface
 
 ## Resources
 
