@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Result};
 use material::Lambertian;
 use vec3::Vec3;
 
@@ -11,6 +12,19 @@ mod material;
 mod ray;
 mod sphere;
 mod vec3;
+use clap::Parser;
+use std::path::PathBuf;
+
+#[derive(Parser, Debug)]
+#[command(name = "raytracerust")]
+#[command(version = "0.1.0")]
+#[command(about="CLI program that generates a ray tracing image", long_about=None)]
+pub struct Args {
+    /// Output destination path. If not provided, the program will send the
+    /// output into stdout
+    #[arg(short = 'o', long, value_name = "OUTPUT")]
+    output: Option<PathBuf>,
+}
 
 /// Basic world configuration used in the ray tracing in a weekend book
 #[allow(dead_code)]
@@ -125,7 +139,9 @@ fn make_random_world() -> hittable::HittableList {
     world
 }
 
-fn main() {
+fn run(args: &Args) -> Result<()> {
+    // Configure camera
+    // TODO: Move this logic out to its own function
     let mut camera_builder = camera::Camera::builder();
     camera_builder.aspect_ratio = 5. / 4.;
     camera_builder.image_width = 1200;
@@ -142,5 +158,18 @@ fn main() {
     let world = make_random_world();
     let mut camera = camera_builder.build();
 
-    camera.render(&world);
+    match &args.output {
+        None => {
+            camera.render(&world);
+            Ok(())
+        }
+        Some(x) => Err(anyhow!("Not implemented yet")),
+    }
+}
+
+fn main() {
+    if let Err(e) = run(&Args::parse()) {
+        eprintln!("{e}");
+        std::process::exit(1);
+    }
 }
